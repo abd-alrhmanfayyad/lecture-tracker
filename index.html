@@ -429,18 +429,39 @@ h1 { margin: 2px 0 0; font-size: 26px; font-weight: 700; line-height: 1.2; }
 .chip-quiz { background: var(--quiz-soft); color: var(--quiz-ink); }
 .chip-mid { background: var(--mid-soft); color: var(--mid-ink); }
 .chip-final { background: var(--final-soft); color: var(--final-ink); }
-.exam-pick { position: relative; cursor: pointer; }
-.exam-pick.set { color: var(--primary-ink); }
-.exam-pick:focus-within { outline: 2px solid var(--focus); outline-offset: 2px; }
-.exam-select {
-  position: absolute; inset: 0;
-  width: 100%; height: 100%;
-  opacity: 0;
-  cursor: pointer;
-  font-size: 16px;
-  -webkit-appearance: none;
-  appearance: none;
+.k-quiz { --k: var(--quiz-ink); }
+.k-mid { --k: var(--mid-ink); }
+.k-final { --k: var(--final-ink); }
+.btn-sm { height: 32px; padding: 0 10px; font-size: 13px; border-radius: 8px; }
+.btn-sm .mi { font-size: 16px; }
+.exam-item {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px;
+  width: 100%;
+  padding: 12px 18px;
+  border-top: 1px solid var(--border);
+  text-align: left;
+  transition: background 0.15s ease;
 }
+.panel-head + .exam-item { border-top: 0; }
+.exam-item:hover { background: var(--surface-2); }
+.exam-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
+.exam-range { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.exam-prog { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+.exam-prog .bar { flex: 1; max-width: 260px; height: 6px; }
+.exam-prog .bar > i { background: var(--k); }
+.exam-prog small { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.exam-item > .mi { color: var(--faint); }
+.exam-side { display: flex; align-items: center; gap: 6px; }
+.suggest { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.suggest button {
+  height: 30px; padding: 0 10px;
+  border: 1px solid var(--border-strong); border-radius: 999px;
+  font-size: 13px; color: var(--text-2);
+}
+.suggest button:hover { background: var(--surface-2); }
+select.input { -webkit-appearance: auto; appearance: auto; padding-right: 8px; }
+.sheet-sub { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
+.hint-inline { margin: 6px 0 0; font-size: 12px; color: var(--muted); }
 .exam-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 12px 18px; border-top: 1px solid var(--border); }
 .panel-head + .exam-row { border-top: 0; }
 .exam-row .lec-sub { margin-top: 2px; }
@@ -663,7 +684,7 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
   .study .lbl { display: none; }
   .lec-actions { gap: 2px; }
   .lec-actions .icon-btn { width: 36px; }
-  .exam-row { padding: 12px 14px; }
+  .exam-row, .exam-item { padding: 12px 14px; }
   .lec { gap: 10px; padding: 12px 14px; }
   .week { padding: 9px 14px; }
   .stat { padding: 12px; gap: 10px; }
@@ -755,6 +776,48 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
   </div>
 </div>
 
+<div class="modal" id="exam-modal" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="exam-title">
+    <div class="sheet-head">
+      <div>
+        <h2 id="exam-title">New exam</h2>
+        <p class="sheet-sub name" id="exam-course" dir="auto"></p>
+      </div>
+      <button class="icon-btn" type="button" data-eform="close" aria-label="Close"><span class="mi" aria-hidden="true">close</span></button>
+    </div>
+    <form class="form" id="exam-form" novalidate>
+      <div class="field">
+        <label for="e-name">Exam name</label>
+        <input class="input" id="e-name" dir="auto" maxlength="40" autocomplete="off" placeholder="e.g. Quiz 1">
+        <div class="suggest" id="e-suggest"></div>
+      </div>
+      <div class="two">
+        <div class="field">
+          <label for="e-from">From lecture</label>
+          <select class="input" id="e-from"></select>
+        </div>
+        <div class="field">
+          <label for="e-to">To lecture</label>
+          <select class="input" id="e-to"></select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="e-date">Exam date (optional)</label>
+        <input class="input" type="date" id="e-date">
+        <p class="hint-inline">With a date, the exam shows a countdown on the home page.</p>
+      </div>
+      <p class="preview" id="e-preview" aria-live="polite"></p>
+      <p class="form-error" id="e-error" role="alert" hidden></p>
+      <div class="sheet-foot">
+        <button class="btn btn-danger" type="button" id="e-delete" hidden></button>
+        <span class="spacer"></span>
+        <button class="btn btn-quiet" type="button" data-eform="close">Cancel</button>
+        <button class="btn btn-primary" type="submit" id="e-submit">Add exam</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
 <script>
@@ -773,11 +836,7 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
     { id: "lavender", hex: "#7d6ad8", label: "Lavender" },
     { id: "mustard", hex: "#b8891f", label: "Mustard" }
   ];
-  const EXAMS = {
-    quiz: { label: "Quiz", cls: "chip-quiz" },
-    mid: { label: "Midterm", cls: "chip-mid" },
-    final: { label: "Final", cls: "chip-final" }
-  };
+  const EXAM_NAMES = ["Quiz 1", "Midterm", "Quiz 2", "Final"];
   const LS_DATA = "lecture-tracker:v1";
   const LS_VIEW = "lecture-tracker:view";
   const LS_THEME = "lecture-tracker:theme";
@@ -825,7 +884,29 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
   function colorOf(c) { return (COLORS.find((x) => x.id === c.color) || COLORS[0]).hex; }
   function daysLabel(days) { return days.slice().sort((a, b) => a - b).map((d) => DAY_NAMES[d]).join(" · "); }
   function plural(n, word) { return n + " " + word + (n === 1 ? "" : "s"); }
-  function examChip(e) { return EXAMS[e] ? '<span class="chip ' + EXAMS[e].cls + '">' + EXAMS[e].label + "</span>" : ""; }
+  // Exam color by its name: finals red, midterms purple, everything else (quizzes) green.
+  function examKind(name) {
+    const n = String(name || "").toLowerCase();
+    if (/final|فاينل|فاينال|نهائي/.test(n)) return "final";
+    if (/mid|ميد|نصف/.test(n)) return "mid";
+    return "quiz";
+  }
+  function examChip(x) { return '<span class="chip chip-' + examKind(x.name) + ' name" dir="auto">' + esc(x.name) + "</span>"; }
+  function examChips(l) { return l.off ? "" : l.exams.map(examChip).join(""); }
+  // The lectures an exam covers (cancelled ones left out) and how many of them were studied.
+  function examStats(x, lecs) {
+    const inRange = lecs.filter((l) => !l.off && l.key >= x.from && l.key <= x.to);
+    return {
+      total: inRange.length,
+      studied: inRange.filter((l) => l.n > 0).length,
+      first: inRange[0] || null,
+      last: inRange[inRange.length - 1] || null
+    };
+  }
+  function rangeLabel(st) {
+    if (!st.total) return "No lectures";
+    return st.first === st.last ? "Lecture " + st.first.num : "Lectures " + st.first.num + "–" + st.last.num;
+  }
   function daysLeft(key) {
     const n = Math.round((parseKey(key) - parseKey(todayKey())) / DAY);
     return n <= 0 ? "Today" : n === 1 ? "Tomorrow" : "in " + n + " days";
@@ -851,7 +932,7 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
         week: weekIndex + 1,
         weekStart: firstSunday + weekIndex * 7 * DAY,
         title: m.t || "",
-        exam: EXAMS[m.e] ? m.e : "",
+        exams: (c.exams || []).filter((x) => key >= x.from && key <= x.to),
         off,
         n: off ? 0 : (m.n || 0),
         num: off ? null : ++num
@@ -861,16 +942,17 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
   }
   function statsOf(lecs) {
     const tk = todayKey();
-    let total = 0, held = 0, studied = 0, off = 0, next = null, today = null;
+    // "Held" = lectures dated today or earlier that weren't cancelled.
+    let total = 0, held = 0, studied = 0, studiedHeld = 0, off = 0, next = null, today = null;
     for (const l of lecs) {
       if (l.key === tk) today = l;
       if (l.off) { off++; continue; }
       total++;
-      if (l.key <= tk) held++;
       if (l.n > 0) studied++;
+      if (l.key <= tk) { held++; if (l.n > 0) studiedHeld++; }
       if (!next && l.key > tk) next = l;
     }
-    return { total, held, studied, off, next, today };
+    return { total, held, studied, studiedHeld, behind: held - studiedHeld, off, next, today };
   }
 
   /* ---------- Data shape ---------- */
@@ -880,8 +962,22 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
     if (d.marks && typeof d.marks === "object") {
       for (const [k, v] of Object.entries(d.marks)) {
         if (!KEY_RE.test(k) || !v || typeof v !== "object") continue;
-        marks[k] = { t: typeof v.t === "string" ? v.t.slice(0, 120) : "", x: !!v.x, n: Math.max(0, Math.min(99, Math.floor(Number(v.n) || 0))), e: EXAMS[v.e] ? v.e : "" };
+        marks[k] = { t: typeof v.t === "string" ? v.t.slice(0, 120) : "", x: !!v.x, n: Math.max(0, Math.min(99, Math.floor(Number(v.n) || 0))) };
       }
+    }
+    const exams = [];
+    if (Array.isArray(d.exams)) {
+      for (const x of d.exams.slice(0, 20)) {
+        if (!x || typeof x !== "object" || !KEY_RE.test(x.from || "") || !KEY_RE.test(x.to || "")) continue;
+        exams.push({
+          id: String(x.id || ("x" + exams.length)).slice(0, 40),
+          name: String(x.name || "Exam").slice(0, 40),
+          date: KEY_RE.test(x.date || "") ? x.date : "",
+          from: x.from <= x.to ? x.from : x.to,
+          to: x.from <= x.to ? x.to : x.from
+        });
+      }
+      exams.sort((a, b) => (a.from < b.from ? -1 : a.from > b.from ? 1 : 0));
     }
     const days = Array.isArray(d.days) ? [...new Set(d.days.map(Number).filter((n) => Number.isInteger(n) && n >= 0 && n <= 6))] : [];
     return {
@@ -892,15 +988,17 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
       start: KEY_RE.test(d.start || "") ? d.start : "",
       end: KEY_RE.test(d.end || "") ? d.end : "",
       createdAt: Number(d.createdAt) || 0,
+      exams,
       marks
     };
   }
   function toDoc(c) {
     const marks = {};
     for (const [k, v] of Object.entries(c.marks)) {
-      if (v.t || v.x || v.n || v.e) marks[k] = { t: v.t || "", x: !!v.x, n: v.n || 0, e: v.e || "" };
+      if (v.t || v.x || v.n) marks[k] = { t: v.t || "", x: !!v.x, n: v.n || 0 };
     }
-    return { name: c.name, color: c.color, days: c.days, start: c.start, end: c.end, createdAt: c.createdAt, marks };
+    const exams = (c.exams || []).map((x) => ({ id: x.id, name: x.name, date: x.date || "", from: x.from, to: x.to }));
+    return { name: c.name, color: c.color, days: c.days, start: c.start, end: c.end, createdAt: c.createdAt, exams, marks };
   }
   function courseList() {
     return Object.values(state.courses).sort((a, b) => (a.createdAt - b.createdAt) || a.name.localeCompare(b.name));
@@ -1005,20 +1103,7 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
   }
 
   /* ---------- Changes ---------- */
-  function mark(c, key) { return c.marks[key] || (c.marks[key] = { t: "", x: false, n: 0, e: "" }); }
-  function setExam(id, key, value) {
-    const c = state.courses[id]; if (!c) return;
-    const m = mark(c, key);
-    const next = EXAMS[value] ? value : "";
-    if (m.e === next) return;
-    m.e = next;
-    const a = document.activeElement;
-    if (a && a.classList && a.classList.contains("exam-select")) a.blur();
-    state.refocus = { act: "exam", id, key };
-    touch(id);
-    render();
-    toast(next ? "Marked as " + EXAMS[next].label : "Back to a regular lecture");
-  }
+  function mark(c, key) { return c.marks[key] || (c.marks[key] = { t: "", x: false, n: 0 }); }
   function study(id, key, delta) {
     const c = state.courses[id]; if (!c) return;
     const m = mark(c, key);
@@ -1063,11 +1148,8 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
   }
 
   /* ---------- Rendering ---------- */
-  // Hold re-renders while a title is being typed or an exam menu is open, so neither gets wiped.
-  function isEditing() {
-    const a = document.activeElement;
-    return !!(a && ((a.dataset && a.dataset.editing === "1") || (a.classList && a.classList.contains("exam-select"))));
-  }
+  // Hold re-renders while a lecture title is being typed, so it doesn't get wiped.
+  function isEditing() { const a = document.activeElement; return !!(a && a.dataset && a.dataset.editing === "1"); }
   function render() {
     if (isEditing()) { state.pending = true; return; }
     state.pending = false;
@@ -1105,7 +1187,7 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
       const active = state.view === "course" && state.courseId === c.id;
       return '<button class="menu-item' + (active ? " active" : "") + '" data-act="open" data-id="' + esc(c.id) + '" style="--c:' + colorOf(c) + '"' + (active ? ' aria-current="page"' : "") + '>'
         + '<span class="dot"></span><span class="label name" dir="auto">' + esc(c.name) + '</span>'
-        + '<span class="count" aria-label="' + s.studied + ' of ' + s.total + ' studied">' + s.studied + "/" + s.total + "</span></button>";
+        + '<span class="count" aria-label="' + s.studiedHeld + " of " + s.held + ' lectures held so far studied">' + s.studiedHeld + "/" + s.held + "</span></button>";
     }).join("");
   }
 
@@ -1138,7 +1220,12 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
   function homeHTML() {
     const list = courseList();
     const tk = todayKey();
-    const head = '<header class="page-head"><div><p class="eyebrow">' + esc(fmt(parseKey(tk), { weekday: "long", day: "numeric", month: "long", year: "numeric" })) + "</p><h1>Overview</h1></div>"
+    let behind = 0, held = 0;
+    for (const c of list) { const s = statsOf(lecturesOf(c)); behind += s.behind; held += s.held; }
+    const summary = !list.length || !held ? ""
+      : behind ? '<p class="sub">' + plural(behind, "lecture") + " held so far still to study</p>"
+      : '<p class="sub">You\'ve studied every lecture held so far</p>';
+    const head = '<header class="page-head"><div><p class="eyebrow">' + esc(fmt(parseKey(tk), { weekday: "long", day: "numeric", month: "long", year: "numeric" })) + "</p><h1>Overview</h1>" + summary + "</div>"
       + (list.length ? '<button class="btn btn-primary head-action" data-act="new"><span class="mi" aria-hidden="true">add</span>New course</button>' : "")
       + "</header>";
     if (!list.length) return head + emptyHTML();
@@ -1164,19 +1251,20 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
 
     const exams = [];
     for (const c of list) {
-      for (const l of lecturesOf(c)) if (l.exam && !l.off && l.key >= tk) exams.push({ c, l });
+      const lecs = lecturesOf(c);
+      for (const x of c.exams) if (x.date && x.date >= tk) exams.push({ c, x, st: examStats(x, lecs) });
     }
-    exams.sort((a, b) => a.l.t - b.l.t);
+    exams.sort((a, b) => (a.x.date < b.x.date ? -1 : a.x.date > b.x.date ? 1 : 0));
     if (exams.length) {
       today += '<section class="panel" aria-labelledby="exams-h"><div class="panel-head"><h2 id="exams-h"><span class="mi" aria-hidden="true" style="color:var(--mid-ink)">assignment</span>Upcoming exams</h2>'
         + "<small>" + (exams.length > 6 ? "Next 6 of " + exams.length : plural(exams.length, "exam")) + "</small></div>"
-        + exams.slice(0, 6).map(({ c, l }) => {
-          const n = Math.round((l.t - parseKey(tk)) / DAY);
+        + exams.slice(0, 6).map(({ c, x, st }) => {
+          const n = Math.round((parseKey(x.date) - parseKey(tk)) / DAY);
           return '<div class="exam-row" style="--c:' + colorOf(c) + '"><div class="lec-main">'
             + '<button class="course-link name" dir="auto" data-act="open" data-id="' + esc(c.id) + '">' + esc(c.name) + "</button>"
-            + '<div class="lec-sub">' + examChip(l.exam) + "<span>" + esc(fmtDay(l.t)) + "</span>"
-            + (l.title ? '<span aria-hidden="true">·</span><span class="t name" dir="auto">' + esc(l.title) + "</span>" : "") + "</div></div>"
-            + '<span class="exam-when' + (n <= 3 ? " soon" : "") + '">' + daysLeft(l.key) + "</span></div>";
+            + '<div class="lec-sub">' + examChip(x) + "<span>" + esc(fmtDay(parseKey(x.date))) + "</span>"
+            + '<span aria-hidden="true">·</span><span>' + rangeLabel(st) + '</span><span aria-hidden="true">·</span><span>studied ' + st.studied + " of " + st.total + "</span></div></div>"
+            + '<span class="exam-when' + (n <= 3 ? " soon" : "") + '">' + daysLeft(x.date) + "</span></div>";
         }).join("")
         + "</section>";
     }
@@ -1190,24 +1278,25 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
     return '<div class="lec' + (l.off ? " cancelled" : "") + '" style="--c:' + colorOf(c) + '">'
       + '<span class="num">' + (l.off ? '<span class="mi" aria-hidden="true">event_busy</span>' : l.num) + "</span>"
       + '<div class="lec-main"><button class="course-link name" dir="auto" data-act="open" data-id="' + esc(c.id) + '">' + esc(c.name) + "</button>"
-      + '<div class="lec-sub">' + (l.off ? '<span class="chip chip-off">Cancelled</span>' : examChip(l.exam) + "<span>Lecture " + l.num + "</span>")
+      + '<div class="lec-sub">' + (l.off ? '<span class="chip chip-off">Cancelled</span>' : "<span>Lecture " + l.num + "</span>" + examChips(l))
       + (l.title ? '<span aria-hidden="true">·</span><span class="t name" dir="auto">' + esc(l.title) + "</span>" : "") + "</div></div>"
       + '<div class="lec-actions">' + (l.off ? "" : studyHTML(c.id, l)) + "</div></div>";
   }
 
   function cardHTML(c) {
     const lecs = lecturesOf(c), s = statsOf(lecs);
-    const pct = s.total ? Math.round((s.studied / s.total) * 100) : 0;
+    const pct = s.held ? Math.round((s.studiedHeld / s.held) * 100) : 0;
     const nextTxt = s.today && !s.today.off ? "Today" : s.next ? fmtDay(s.next.t) : s.total ? "Finished" : "None";
     const tk = todayKey();
-    const nextExam = lecs.find((l) => l.exam && !l.off && l.key >= tk);
+    const nextExam = c.exams.filter((x) => x.date && x.date >= tk).sort((a, b) => (a.date < b.date ? -1 : 1))[0];
+    const nx = nextExam ? examStats(nextExam, lecs) : null;
     return '<button class="ccard" data-act="open" data-id="' + esc(c.id) + '" style="--c:' + colorOf(c) + '">'
       + '<span class="ccard-head"><span class="ccard-icon"><span class="mi" aria-hidden="true">menu_book</span></span>'
       + '<span class="ccard-title"><span class="ccard-name name" dir="auto">' + esc(c.name) + '</span><span class="ccard-days">' + esc(daysLabel(c.days)) + "</span></span></span>"
-      + '<span class="ccard-body"><span class="ccard-progress"><span class="progress-row"><span>Studied</span><span><strong>' + s.studied + "</strong> of " + s.total + "</span></span>"
-      + '<span class="bar" role="img" aria-label="' + pct + '% of lectures studied"><i style="width:' + pct + '%"></i></span></span>'
-      + '<span class="meta"><span><small>Held so far</small><b>' + s.held + '</b></span><span><small>Next lecture</small><b>' + esc(nextTxt) + "</b></span></span>"
-      + (nextExam ? '<span class="ccard-exam">' + examChip(nextExam.exam) + "<span>" + esc(fmtDay(nextExam.t)) + " · " + daysLeft(nextExam.key) + "</span></span>" : "")
+      + '<span class="ccard-body"><span class="ccard-progress"><span class="progress-row"><span>Studied so far</span><span><strong>' + s.studiedHeld + "</strong> of " + s.held + " held</span></span>"
+      + '<span class="bar" role="img" aria-label="' + pct + '% of the lectures held so far studied"><i style="width:' + pct + '%"></i></span></span>'
+      + '<span class="meta"><span><small>To catch up</small><b>' + (s.behind ? plural(s.behind, "lecture") : s.held ? "None" : "–") + '</b></span><span><small>Next lecture</small><b>' + esc(nextTxt) + "</b></span></span>"
+      + (nextExam ? '<span class="ccard-exam">' + examChip(nextExam) + "<span>" + esc(fmtDay(parseKey(nextExam.date))) + " · " + daysLeft(nextExam.date) + " · studied " + nx.studied + "/" + nx.total + "</span></span>" : "")
       + "</span></button>";
   }
 
@@ -1220,15 +1309,15 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
     let html = '<header class="page-head" style="--c:' + color + '"><div>'
       + '<button class="back" data-act="home"><span class="mi" aria-hidden="true">chevron_left</span>All courses</button>'
       + '<div class="course-title"><span class="course-icon"><span class="mi" aria-hidden="true">menu_book</span></span><div>'
-      + '<h1 class="name" dir="auto">' + esc(c.name) + '</h1><p class="sub">' + esc(daysLabel(c.days)) + (range ? " · " + esc(range) : "") + "</p></div></div></div>"
+      + '<h1 class="name" dir="auto">' + esc(c.name) + '</h1><p class="sub">' + esc(daysLabel(c.days)) + (range ? " · " + esc(range) : "") + (s.off ? " · " + s.off + " cancelled" : "") + "</p></div></div></div>"
       + '<button class="btn btn-outline head-action" data-act="edit" data-id="' + esc(c.id) + '"><span class="mi" aria-hidden="true">edit</span>Edit course</button>'
       + "</header>";
 
     html += '<div class="stats">'
       + statHTML("event_note", "t-blue", "Lectures", String(s.total))
       + statHTML("history", "t-amber", "Held so far", String(s.held))
-      + statHTML("task_alt", "t-green", "Studied", s.studied + " <em>/ " + s.total + "</em>")
-      + statHTML("event_busy", "t-red", "Cancelled", String(s.off))
+      + statHTML("task_alt", "t-green", "Studied so far", s.studiedHeld + " <em>/ " + s.held + "</em>")
+      + statHTML(s.behind ? "pending_actions" : "verified", s.behind ? "t-red" : "t-green", "To catch up", String(s.behind))
       + "</div>";
 
     if (!lecs.length) {
@@ -1236,7 +1325,9 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
       return html;
     }
 
-    html += '<p class="hint"><span class="mi" aria-hidden="true">info</span><span>Tap the check every time you study a lecture, and the number counts how many times. The clipboard icon marks a quiz, midterm or final, and the calendar icon strikes out a cancelled lecture.</span></p>';
+    html += examsPanelHTML(c, lecs, tk);
+
+    html += '<p class="hint"><span class="mi" aria-hidden="true">info</span><span>Tap the check every time you study a lecture, and the number counts how many times. The calendar icon strikes out a cancelled lecture.</span></p>';
 
     let rows = "", week = null;
     for (const l of lecs) {
@@ -1250,6 +1341,27 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
     return html;
   }
 
+  function examsPanelHTML(c, lecs, tk) {
+    const id = esc(c.id);
+    let html = '<section class="panel" aria-labelledby="course-exams-h"><div class="panel-head"><h2 id="course-exams-h"><span class="mi" aria-hidden="true" style="color:var(--mid-ink)">assignment</span>Exams</h2>'
+      + '<button class="btn btn-outline btn-sm" data-act="exam-new" data-id="' + id + '"><span class="mi" aria-hidden="true">add</span>Add exam</button></div>';
+    if (!c.exams.length) {
+      html += '<div class="panel-empty"><span class="mi" aria-hidden="true">info</span><span>Add your quizzes, midterm and final, and pick which lectures each one covers. You\'ll see how much of each exam\'s material you\'ve studied.</span></div>';
+      return html + "</section>";
+    }
+    for (const x of c.exams) {
+      const st = examStats(x, lecs);
+      const pct = st.total ? Math.round((st.studied / st.total) * 100) : 0;
+      const when = x.date ? esc(fmtDay(parseKey(x.date))) + (x.date >= tk ? " · " + daysLeft(x.date) : " · done") : "";
+      html += '<button class="exam-item k-' + examKind(x.name) + '" data-act="exam-edit" data-id="' + id + '" data-exam="' + esc(x.id) + '">'
+        + '<span class="lec-main"><span class="exam-top">' + examChip(x) + '<span class="exam-range">' + rangeLabel(st) + (when ? " · " + when : "") + "</span></span>"
+        + '<span class="exam-prog"><span class="bar" role="img" aria-label="' + pct + '% studied"><i style="width:' + pct + '%"></i></span>'
+        + "<small>Studied " + st.studied + " of " + st.total + "</small></span></span>"
+        + '<span class="mi" aria-hidden="true">chevron_right</span></button>';
+    }
+    return html + "</section>";
+  }
+
   function statHTML(icon, tone, label, value) {
     return '<div class="stat"><span class="stat-icon ' + tone + '"><span class="mi" aria-hidden="true">' + icon + "</span></span>"
       + "<div><small>" + label + "</small><b>" + value + "</b></div></div>";
@@ -1261,7 +1373,7 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
     if (l.key === tk) cls.push("today"); else if (l.key < tk) cls.push("past");
     const chips = (l.key === tk ? '<span class="chip chip-today">Today</span>' : "")
       + (!l.off && l.key === focusKey && l.key !== tk ? '<span class="chip chip-next">Next</span>' : "")
-      + (l.off ? '<span class="chip chip-off">Cancelled</span>' : examChip(l.exam));
+      + (l.off ? '<span class="chip chip-off">Cancelled</span>' : examChips(l));
     const id = esc(c.id);
     const title = l.off
       ? (l.title ? '<div class="lec-sub"><span class="t name" dir="auto">' + esc(l.title) + "</span></div>" : "")
@@ -1271,18 +1383,9 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
     return '<div class="' + cls.join(" ") + '"' + (l.key === focusKey ? ' id="focus-row"' : "") + ">"
       + '<span class="num" aria-label="' + (l.off ? "Cancelled" : "Lecture " + l.num) + '">' + (l.off ? "–" : l.num) + "</span>"
       + '<div class="lec-main"><div class="lec-date"><span class="d">' + esc(fmtDay(l.t)) + "</span>" + chips + "</div>" + title + "</div>"
-      + '<div class="lec-actions">' + (l.off ? "" : studyHTML(c.id, l) + examPickHTML(c.id, l))
+      + '<div class="lec-actions">' + (l.off ? "" : studyHTML(c.id, l))
       + '<button class="icon-btn" data-act="off" data-id="' + id + '" data-key="' + l.key + '" aria-label="' + (l.off ? "Restore this lecture" : "Mark as cancelled") + '" title="' + (l.off ? "Restore this lecture" : "Mark as cancelled") + '">'
       + '<span class="mi" aria-hidden="true">' + (l.off ? "undo" : "event_busy") + "</span></button></div></div>";
-  }
-
-  function examPickHTML(id, l) {
-    const opts = [["", "Regular lecture"], ["quiz", "Quiz"], ["mid", "Midterm"], ["final", "Final"]]
-      .map(([v, label]) => '<option value="' + v + '"' + (l.exam === v ? " selected" : "") + ">" + label + "</option>").join("");
-    const tip = l.exam ? EXAMS[l.exam].label + ". Change exam type" : "Mark as a quiz, midterm or final";
-    return '<label class="icon-btn exam-pick' + (l.exam ? " set" : "") + '" title="' + tip + '">'
-      + '<span class="mi" aria-hidden="true">' + (l.exam ? "assignment_turned_in" : "assignment") + "</span>"
-      + '<select class="exam-select" id="exam-' + l.key + '" data-act="exam" data-id="' + esc(id) + '" data-key="' + l.key + '" aria-label="' + tip + '">' + opts + "</select></label>";
   }
 
   function studyHTML(id, l) {
@@ -1420,7 +1523,7 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
       toast("Course updated");
     } else {
       const id = "c" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-      state.courses[id] = { id, name, color, days, start, end, createdAt: Date.now(), marks: {} };
+      state.courses[id] = { id, name, color, days, start, end, createdAt: Date.now(), exams: [], marks: {} };
       touch(id);
       closeForm();
       go("course", id);
@@ -1443,6 +1546,113 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
     closeForm();
     go("home");
     toast("Course deleted");
+  }
+
+  /* ---------- Add / edit exam sheet ---------- */
+  let eform = null;
+  function examLectures(c) { return lecturesOf(c).filter((l) => !l.off); }
+  function pickOption(sel, key, preferAfter) {
+    const vals = [...sel.options].map((o) => o.value);
+    if (!vals.length) return;
+    if (vals.includes(key)) { sel.value = key; return; }
+    // The saved lecture may have been cancelled since: snap to the nearest one still on the list.
+    const after = vals.find((v) => v > key), before = vals.filter((v) => v < key).pop();
+    sel.value = preferAfter ? (after || before) : (before || after);
+  }
+  function openExam(courseId, examId) {
+    const c = state.courses[courseId]; if (!c) return;
+    const lecs = examLectures(c);
+    if (!lecs.length) { toast("This course has no lectures to pick from yet."); return; }
+    const x = examId ? c.exams.find((e) => e.id === examId) : null;
+    eform = { courseId, id: x ? x.id : null, toTouched: !!x, confirmDelete: false };
+    lastFocus = document.activeElement;
+
+    const opts = lecs.map((l) => '<option value="' + l.key + '">Lecture ' + l.num + " · " + esc(fmtDay(l.t)) + "</option>").join("");
+    $("#e-from").innerHTML = opts;
+    $("#e-to").innerHTML = opts;
+    let from, to;
+    if (x) { from = x.from; to = x.to; }
+    else {
+      // A new exam starts right after the last lecture the previous exams cover.
+      const lastTo = c.exams.reduce((m, e) => (e.to > m ? e.to : m), "");
+      let i = lastTo ? lecs.findIndex((l) => l.key > lastTo) : 0;
+      if (i < 0) i = 0;
+      from = lecs[i].key;
+      to = lecs[Math.min(i + 5, lecs.length - 1)].key;
+    }
+    pickOption($("#e-from"), from, true);
+    pickOption($("#e-to"), to, false);
+
+    const used = new Set(c.exams.map((e) => e.name.toLowerCase()));
+    $("#e-name").value = x ? x.name : (EXAM_NAMES.find((n) => !used.has(n.toLowerCase())) || "");
+    $("#e-suggest").innerHTML = EXAM_NAMES.map((n) => '<button type="button" data-name="' + n + '">' + n + "</button>").join("");
+    $("#e-date").value = x ? x.date : "";
+    $("#exam-title").textContent = x ? "Edit exam" : "New exam";
+    $("#exam-course").textContent = c.name;
+    const del = $("#e-delete");
+    del.hidden = !x;
+    del.classList.remove("armed");
+    del.innerHTML = '<span class="mi" aria-hidden="true">delete</span>Delete exam';
+    $("#e-submit").textContent = x ? "Save changes" : "Add exam";
+    $("#e-error").hidden = true;
+    updateExamPreview();
+    $("#exam-modal").hidden = false;
+    document.body.classList.add("modal-open");
+  }
+  function closeExam() {
+    $("#exam-modal").hidden = true;
+    document.body.classList.remove("modal-open");
+    eform = null;
+    if (lastFocus && document.contains(lastFocus)) lastFocus.focus({ preventScroll: true });
+  }
+  function updateExamPreview() {
+    if (!eform) return;
+    const c = state.courses[eform.courseId]; if (!c) return;
+    const from = $("#e-from").value, to = $("#e-to").value;
+    const p = $("#e-preview");
+    if (from > to) { p.innerHTML = '<span class="mi" aria-hidden="true">info</span><span>The first lecture comes after the last one.</span>'; return; }
+    const st = examStats({ from, to }, lecturesOf(c));
+    p.innerHTML = '<span class="mi" aria-hidden="true">menu_book</span><span><b>' + plural(st.total, "lecture") + "</b>, studied " + st.studied + " of them so far</span>";
+  }
+  function submitExam(ev) {
+    ev.preventDefault();
+    if (!eform) return;
+    const c = state.courses[eform.courseId]; if (!c) { closeExam(); return; }
+    const name = $("#e-name").value.trim().slice(0, 40);
+    const from = $("#e-from").value, to = $("#e-to").value, date = $("#e-date").value;
+    const err = (m) => { const e = $("#e-error"); e.textContent = m; e.hidden = false; };
+    if (!name) return err("Enter the exam name, like Quiz 1 or Midterm.");
+    if (!from || !to) return err("Pick the first and last lecture this exam covers.");
+    if (from > to) return err("The first lecture has to come before the last one.");
+    if (date && !KEY_RE.test(date)) return err("Enter a valid date, or leave it empty.");
+    const data = { name, from, to, date: date || "" };
+    if (eform.id) {
+      const x = c.exams.find((e) => e.id === eform.id);
+      if (x) Object.assign(x, data);
+    } else {
+      c.exams.push(Object.assign({ id: "x" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5) }, data));
+    }
+    c.exams.sort((a, b) => (a.from < b.from ? -1 : a.from > b.from ? 1 : 0));
+    const wasEdit = !!eform.id;
+    touch(c.id);
+    closeExam();
+    render();
+    toast(wasEdit ? "Exam updated" : "Exam added");
+  }
+  function deleteExam() {
+    if (!eform || !eform.id) return;
+    const btn = $("#e-delete");
+    if (!eform.confirmDelete) {
+      eform.confirmDelete = true;
+      btn.classList.add("armed");
+      btn.innerHTML = '<span class="mi" aria-hidden="true">delete_forever</span>Tap again to delete';
+      return;
+    }
+    const c = state.courses[eform.courseId];
+    if (c) { c.exams = c.exams.filter((e) => e.id !== eform.id); touch(c.id); }
+    closeExam();
+    render();
+    toast("Exam deleted");
   }
 
   /* ---------- Toast ---------- */
@@ -1474,6 +1684,8 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
       case "off": state.refocus = { act: "off", id, key }; toggleOff(id, key); break;
       case "title": startTitleEdit(el); break;
       case "theme": setTheme(el.dataset.value); break;
+      case "exam-new": openExam(id, null); break;
+      case "exam-edit": openExam(id, el.dataset.exam); break;
     }
   });
   $("#modal").addEventListener("click", (e) => {
@@ -1487,10 +1699,26 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
       updatePreview();
     }
   });
-  document.addEventListener("change", (e) => {
-    const sel = e.target.closest && e.target.closest(".exam-select");
-    if (sel) setExam(sel.dataset.id, sel.dataset.key, sel.value);
+  $("#exam-modal").addEventListener("click", (e) => {
+    if (e.target === e.currentTarget || e.target.closest('[data-eform="close"]')) { closeExam(); return; }
+    const s = e.target.closest("#e-suggest button");
+    if (s) { $("#e-name").value = s.dataset.name; $("#e-error").hidden = true; }
   });
+  $("#e-from").addEventListener("change", () => {
+    if ($("#e-from").value > $("#e-to").value) $("#e-to").value = $("#e-from").value;
+    updateExamPreview();
+  });
+  $("#e-to").addEventListener("change", () => { eform && (eform.toTouched = true); updateExamPreview(); });
+  $("#e-date").addEventListener("change", () => {
+    // For a new exam, a date fills in "To lecture" with the last lecture before the exam.
+    const d = $("#e-date").value;
+    if (!eform || eform.toTouched || !KEY_RE.test(d)) return;
+    const from = $("#e-from").value;
+    const vals = [...$("#e-to").options].map((o) => o.value).filter((v) => v >= from && v < d);
+    if (vals.length) { $("#e-to").value = vals[vals.length - 1]; updateExamPreview(); }
+  });
+  $("#exam-form").addEventListener("submit", submitExam);
+  $("#e-delete").addEventListener("click", deleteExam);
   $("#f-start").addEventListener("input", updatePreview);
   $("#f-end").addEventListener("input", updatePreview);
   $("#f-start").addEventListener("change", updatePreview);
@@ -1499,7 +1727,8 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
   $("#f-delete").addEventListener("click", deleteFromForm);
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Escape") return;
-    if (!$("#modal").hidden) closeForm();
+    if (!$("#exam-modal").hidden) closeExam();
+    else if (!$("#modal").hidden) closeForm();
     else if (state.drawer) { state.drawer = false; syncDrawer(); }
   });
   document.addEventListener("focusout", () => { setTimeout(() => { if (state.pending && !isEditing()) render(); }, 0); });

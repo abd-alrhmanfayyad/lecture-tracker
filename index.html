@@ -60,6 +60,12 @@ img { max-width: 100%; }
   --warn: #92400e;
   --warn-soft: #fef3c7;
   --warn-line: #f59e0b;
+  --quiz-soft: #e1f5ee;
+  --quiz-ink: #0f6e56;
+  --mid-soft: #ede9fe;
+  --mid-ink: #5b21b6;
+  --final-soft: #fee2e2;
+  --final-ink: #991b1b;
   --shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
   --sheet-shadow: 0 24px 60px rgba(15, 23, 42, 0.22);
   --scrim: rgba(15, 23, 42, 0.45);
@@ -77,6 +83,9 @@ img { max-width: 100%; }
     --ok: #86efac; --ok-soft: rgba(34, 197, 94, 0.12); --ok-border: rgba(34, 197, 94, 0.32);
     --bad: #fca5a5; --bad-soft: rgba(239, 68, 68, 0.13);
     --warn: #fcd34d; --warn-soft: rgba(245, 158, 11, 0.14); --warn-line: #f59e0b;
+    --quiz-soft: rgba(52, 211, 153, 0.14); --quiz-ink: #6ee7b7;
+    --mid-soft: rgba(139, 92, 246, 0.2); --mid-ink: #c4b5fd;
+    --final-soft: rgba(239, 68, 68, 0.18); --final-ink: #fca5a5;
     --shadow: 0 10px 24px rgba(0, 0, 0, 0.35); --sheet-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
     --scrim: rgba(2, 6, 15, 0.6); --skeleton: #1d2a44;
     color-scheme: dark;
@@ -92,6 +101,9 @@ img { max-width: 100%; }
   --ok: #86efac; --ok-soft: rgba(34, 197, 94, 0.12); --ok-border: rgba(34, 197, 94, 0.32);
   --bad: #fca5a5; --bad-soft: rgba(239, 68, 68, 0.13);
   --warn: #fcd34d; --warn-soft: rgba(245, 158, 11, 0.14); --warn-line: #f59e0b;
+  --quiz-soft: rgba(52, 211, 153, 0.14); --quiz-ink: #6ee7b7;
+  --mid-soft: rgba(139, 92, 246, 0.2); --mid-ink: #c4b5fd;
+  --final-soft: rgba(239, 68, 68, 0.18); --final-ink: #fca5a5;
   --shadow: 0 10px 24px rgba(0, 0, 0, 0.35); --sheet-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
   --scrim: rgba(2, 6, 15, 0.6); --skeleton: #1d2a44;
   color-scheme: dark;
@@ -394,6 +406,7 @@ h1 { margin: 2px 0 0; font-size: 26px; font-weight: 700; line-height: 1.2; }
   gap: 12px;
   padding: 12px 18px;
   border-top: 1px solid var(--border);
+  scroll-margin-top: 80px;
 }
 .panel-head + .lec { border-top: 0; }
 .num {
@@ -413,6 +426,27 @@ h1 { margin: 2px 0 0; font-size: 26px; font-weight: 700; line-height: 1.2; }
 .chip-today { background: var(--warn-soft); color: var(--warn); }
 .chip-next { background: var(--primary-soft); color: var(--primary-ink); }
 .chip-off { background: var(--bad-soft); color: var(--bad); }
+.chip-quiz { background: var(--quiz-soft); color: var(--quiz-ink); }
+.chip-mid { background: var(--mid-soft); color: var(--mid-ink); }
+.chip-final { background: var(--final-soft); color: var(--final-ink); }
+.exam-pick { position: relative; cursor: pointer; }
+.exam-pick.set { color: var(--primary-ink); }
+.exam-pick:focus-within { outline: 2px solid var(--focus); outline-offset: 2px; }
+.exam-select {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  font-size: 16px;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.exam-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 12px 18px; border-top: 1px solid var(--border); }
+.panel-head + .exam-row { border-top: 0; }
+.exam-row .lec-sub { margin-top: 2px; }
+.exam-when { font-size: 13px; font-weight: 500; color: var(--text-2); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.exam-when.soon { color: var(--bad); }
+.ccard-exam { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .lec-title {
   display: flex; align-items: center; gap: 6px;
   max-width: 100%; min-height: 28px;
@@ -474,7 +508,7 @@ h1 { margin: 2px 0 0; font-size: 26px; font-weight: 700; line-height: 1.2; }
 .dot-inline { width: 8px; height: 8px; border-radius: 50%; background: var(--c); display: inline-block; flex-shrink: 0; }
 
 /* ---------- Empty + loading ---------- */
-.empty {
+.empty-state {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 16px;
@@ -484,9 +518,9 @@ h1 { margin: 2px 0 0; font-size: 26px; font-weight: 700; line-height: 1.2; }
 }
 .empty-icon { width: 64px; height: 64px; border-radius: 18px; background: var(--primary-soft); color: var(--primary-ink); display: grid; place-items: center; }
 .empty-icon .mi { font-size: 32px; }
-.empty h2 { margin: 4px 0 0; font-size: 20px; font-weight: 500; }
-.empty p { margin: 0; max-width: 46ch; color: var(--muted); }
-.empty .btn { margin-top: 8px; }
+.empty-state h2 { margin: 4px 0 0; font-size: 20px; font-weight: 500; }
+.empty-state p { margin: 0; max-width: 46ch; color: var(--muted); }
+.empty-state .btn { margin-top: 8px; }
 .how { list-style: none; margin: 16px 0 0; padding: 16px 0 0; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; text-align: left; font-size: 14px; color: var(--text-2); width: 100%; max-width: 380px; }
 .how li { display: flex; gap: 10px; align-items: center; }
 .how .mi { font-size: 18px; color: var(--primary-ink); }
@@ -627,6 +661,9 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
 }
 @media (max-width: 519px) {
   .study .lbl { display: none; }
+  .lec-actions { gap: 2px; }
+  .lec-actions .icon-btn { width: 36px; }
+  .exam-row { padding: 12px 14px; }
   .lec { gap: 10px; padding: 12px 14px; }
   .week { padding: 9px 14px; }
   .stat { padding: 12px; gap: 10px; }
@@ -736,6 +773,11 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
     { id: "lavender", hex: "#7d6ad8", label: "Lavender" },
     { id: "mustard", hex: "#b8891f", label: "Mustard" }
   ];
+  const EXAMS = {
+    quiz: { label: "Quiz", cls: "chip-quiz" },
+    mid: { label: "Midterm", cls: "chip-mid" },
+    final: { label: "Final", cls: "chip-final" }
+  };
   const LS_DATA = "lecture-tracker:v1";
   const LS_VIEW = "lecture-tracker:view";
   const LS_THEME = "lecture-tracker:theme";
@@ -783,6 +825,11 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
   function colorOf(c) { return (COLORS.find((x) => x.id === c.color) || COLORS[0]).hex; }
   function daysLabel(days) { return days.slice().sort((a, b) => a - b).map((d) => DAY_NAMES[d]).join(" · "); }
   function plural(n, word) { return n + " " + word + (n === 1 ? "" : "s"); }
+  function examChip(e) { return EXAMS[e] ? '<span class="chip ' + EXAMS[e].cls + '">' + EXAMS[e].label + "</span>" : ""; }
+  function daysLeft(key) {
+    const n = Math.round((parseKey(key) - parseKey(todayKey())) / DAY);
+    return n <= 0 ? "Today" : n === 1 ? "Tomorrow" : "in " + n + " days";
+  }
 
   /* ---------- Lectures ---------- */
   // One lecture for every chosen weekday between the first and last day of teaching.
@@ -804,6 +851,7 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
         week: weekIndex + 1,
         weekStart: firstSunday + weekIndex * 7 * DAY,
         title: m.t || "",
+        exam: EXAMS[m.e] ? m.e : "",
         off,
         n: off ? 0 : (m.n || 0),
         num: off ? null : ++num
@@ -832,7 +880,7 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
     if (d.marks && typeof d.marks === "object") {
       for (const [k, v] of Object.entries(d.marks)) {
         if (!KEY_RE.test(k) || !v || typeof v !== "object") continue;
-        marks[k] = { t: typeof v.t === "string" ? v.t.slice(0, 120) : "", x: !!v.x, n: Math.max(0, Math.min(99, Math.floor(Number(v.n) || 0))) };
+        marks[k] = { t: typeof v.t === "string" ? v.t.slice(0, 120) : "", x: !!v.x, n: Math.max(0, Math.min(99, Math.floor(Number(v.n) || 0))), e: EXAMS[v.e] ? v.e : "" };
       }
     }
     const days = Array.isArray(d.days) ? [...new Set(d.days.map(Number).filter((n) => Number.isInteger(n) && n >= 0 && n <= 6))] : [];
@@ -850,7 +898,7 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
   function toDoc(c) {
     const marks = {};
     for (const [k, v] of Object.entries(c.marks)) {
-      if (v.t || v.x || v.n) marks[k] = { t: v.t || "", x: !!v.x, n: v.n || 0 };
+      if (v.t || v.x || v.n || v.e) marks[k] = { t: v.t || "", x: !!v.x, n: v.n || 0, e: v.e || "" };
     }
     return { name: c.name, color: c.color, days: c.days, start: c.start, end: c.end, createdAt: c.createdAt, marks };
   }
@@ -957,7 +1005,20 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
   }
 
   /* ---------- Changes ---------- */
-  function mark(c, key) { return c.marks[key] || (c.marks[key] = { t: "", x: false, n: 0 }); }
+  function mark(c, key) { return c.marks[key] || (c.marks[key] = { t: "", x: false, n: 0, e: "" }); }
+  function setExam(id, key, value) {
+    const c = state.courses[id]; if (!c) return;
+    const m = mark(c, key);
+    const next = EXAMS[value] ? value : "";
+    if (m.e === next) return;
+    m.e = next;
+    const a = document.activeElement;
+    if (a && a.classList && a.classList.contains("exam-select")) a.blur();
+    state.refocus = { act: "exam", id, key };
+    touch(id);
+    render();
+    toast(next ? "Marked as " + EXAMS[next].label : "Back to a regular lecture");
+  }
   function study(id, key, delta) {
     const c = state.courses[id]; if (!c) return;
     const m = mark(c, key);
@@ -1002,7 +1063,11 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
   }
 
   /* ---------- Rendering ---------- */
-  function isEditing() { const a = document.activeElement; return !!(a && a.dataset && a.dataset.editing === "1"); }
+  // Hold re-renders while a title is being typed or an exam menu is open, so neither gets wiped.
+  function isEditing() {
+    const a = document.activeElement;
+    return !!(a && ((a.dataset && a.dataset.editing === "1") || (a.classList && a.classList.contains("exam-select"))));
+  }
   function render() {
     if (isEditing()) { state.pending = true; return; }
     state.pending = false;
@@ -1058,7 +1123,7 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
   }
 
   function emptyHTML() {
-    return '<section class="empty">'
+    return '<section class="empty-state">'
       + '<span class="empty-icon"><span class="mi" aria-hidden="true">school</span></span>'
       + "<h2>Add your first course</h2>"
       + "<p>Enter the course name, your lecture days, and the first and last day of teaching. The lecture list fills in by itself, one row for each lecture with its date.</p>"
@@ -1097,6 +1162,25 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
     }
     today += "</section>";
 
+    const exams = [];
+    for (const c of list) {
+      for (const l of lecturesOf(c)) if (l.exam && !l.off && l.key >= tk) exams.push({ c, l });
+    }
+    exams.sort((a, b) => a.l.t - b.l.t);
+    if (exams.length) {
+      today += '<section class="panel" aria-labelledby="exams-h"><div class="panel-head"><h2 id="exams-h"><span class="mi" aria-hidden="true" style="color:var(--mid-ink)">assignment</span>Upcoming exams</h2>'
+        + "<small>" + (exams.length > 6 ? "Next 6 of " + exams.length : plural(exams.length, "exam")) + "</small></div>"
+        + exams.slice(0, 6).map(({ c, l }) => {
+          const n = Math.round((l.t - parseKey(tk)) / DAY);
+          return '<div class="exam-row" style="--c:' + colorOf(c) + '"><div class="lec-main">'
+            + '<button class="course-link name" dir="auto" data-act="open" data-id="' + esc(c.id) + '">' + esc(c.name) + "</button>"
+            + '<div class="lec-sub">' + examChip(l.exam) + "<span>" + esc(fmtDay(l.t)) + "</span>"
+            + (l.title ? '<span aria-hidden="true">·</span><span class="t name" dir="auto">' + esc(l.title) + "</span>" : "") + "</div></div>"
+            + '<span class="exam-when' + (n <= 3 ? " soon" : "") + '">' + daysLeft(l.key) + "</span></div>";
+        }).join("")
+        + "</section>";
+    }
+
     const cards = '<h2 class="section-title">Your courses</h2><div class="grid">' + list.map(cardHTML).join("")
       + '<button class="ccard-add" data-act="new"><span class="mi" aria-hidden="true">add_circle_outline</span>Add a course</button></div>';
     return head + today + cards;
@@ -1106,7 +1190,7 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
     return '<div class="lec' + (l.off ? " cancelled" : "") + '" style="--c:' + colorOf(c) + '">'
       + '<span class="num">' + (l.off ? '<span class="mi" aria-hidden="true">event_busy</span>' : l.num) + "</span>"
       + '<div class="lec-main"><button class="course-link name" dir="auto" data-act="open" data-id="' + esc(c.id) + '">' + esc(c.name) + "</button>"
-      + '<div class="lec-sub">' + (l.off ? '<span class="chip chip-off">Cancelled</span>' : "<span>Lecture " + l.num + "</span>")
+      + '<div class="lec-sub">' + (l.off ? '<span class="chip chip-off">Cancelled</span>' : examChip(l.exam) + "<span>Lecture " + l.num + "</span>")
       + (l.title ? '<span aria-hidden="true">·</span><span class="t name" dir="auto">' + esc(l.title) + "</span>" : "") + "</div></div>"
       + '<div class="lec-actions">' + (l.off ? "" : studyHTML(c.id, l)) + "</div></div>";
   }
@@ -1115,12 +1199,15 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
     const lecs = lecturesOf(c), s = statsOf(lecs);
     const pct = s.total ? Math.round((s.studied / s.total) * 100) : 0;
     const nextTxt = s.today && !s.today.off ? "Today" : s.next ? fmtDay(s.next.t) : s.total ? "Finished" : "None";
+    const tk = todayKey();
+    const nextExam = lecs.find((l) => l.exam && !l.off && l.key >= tk);
     return '<button class="ccard" data-act="open" data-id="' + esc(c.id) + '" style="--c:' + colorOf(c) + '">'
       + '<span class="ccard-head"><span class="ccard-icon"><span class="mi" aria-hidden="true">menu_book</span></span>'
       + '<span class="ccard-title"><span class="ccard-name name" dir="auto">' + esc(c.name) + '</span><span class="ccard-days">' + esc(daysLabel(c.days)) + "</span></span></span>"
       + '<span class="ccard-body"><span class="ccard-progress"><span class="progress-row"><span>Studied</span><span><strong>' + s.studied + "</strong> of " + s.total + "</span></span>"
       + '<span class="bar" role="img" aria-label="' + pct + '% of lectures studied"><i style="width:' + pct + '%"></i></span></span>'
       + '<span class="meta"><span><small>Held so far</small><b>' + s.held + '</b></span><span><small>Next lecture</small><b>' + esc(nextTxt) + "</b></span></span>"
+      + (nextExam ? '<span class="ccard-exam">' + examChip(nextExam.exam) + "<span>" + esc(fmtDay(nextExam.t)) + " · " + daysLeft(nextExam.key) + "</span></span>" : "")
       + "</span></button>";
   }
 
@@ -1149,7 +1236,7 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
       return html;
     }
 
-    html += '<p class="hint"><span class="mi" aria-hidden="true">info</span><span>Tap the check every time you study a lecture, and the number counts how many times. Tap the calendar icon to strike out a cancelled lecture.</span></p>';
+    html += '<p class="hint"><span class="mi" aria-hidden="true">info</span><span>Tap the check every time you study a lecture, and the number counts how many times. The clipboard icon marks a quiz, midterm or final, and the calendar icon strikes out a cancelled lecture.</span></p>';
 
     let rows = "", week = null;
     for (const l of lecs) {
@@ -1174,7 +1261,7 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
     if (l.key === tk) cls.push("today"); else if (l.key < tk) cls.push("past");
     const chips = (l.key === tk ? '<span class="chip chip-today">Today</span>' : "")
       + (!l.off && l.key === focusKey && l.key !== tk ? '<span class="chip chip-next">Next</span>' : "")
-      + (l.off ? '<span class="chip chip-off">Cancelled</span>' : "");
+      + (l.off ? '<span class="chip chip-off">Cancelled</span>' : examChip(l.exam));
     const id = esc(c.id);
     const title = l.off
       ? (l.title ? '<div class="lec-sub"><span class="t name" dir="auto">' + esc(l.title) + "</span></div>" : "")
@@ -1184,9 +1271,18 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
     return '<div class="' + cls.join(" ") + '"' + (l.key === focusKey ? ' id="focus-row"' : "") + ">"
       + '<span class="num" aria-label="' + (l.off ? "Cancelled" : "Lecture " + l.num) + '">' + (l.off ? "–" : l.num) + "</span>"
       + '<div class="lec-main"><div class="lec-date"><span class="d">' + esc(fmtDay(l.t)) + "</span>" + chips + "</div>" + title + "</div>"
-      + '<div class="lec-actions">' + (l.off ? "" : studyHTML(c.id, l))
+      + '<div class="lec-actions">' + (l.off ? "" : studyHTML(c.id, l) + examPickHTML(c.id, l))
       + '<button class="icon-btn" data-act="off" data-id="' + id + '" data-key="' + l.key + '" aria-label="' + (l.off ? "Restore this lecture" : "Mark as cancelled") + '" title="' + (l.off ? "Restore this lecture" : "Mark as cancelled") + '">'
       + '<span class="mi" aria-hidden="true">' + (l.off ? "undo" : "event_busy") + "</span></button></div></div>";
+  }
+
+  function examPickHTML(id, l) {
+    const opts = [["", "Regular lecture"], ["quiz", "Quiz"], ["mid", "Midterm"], ["final", "Final"]]
+      .map(([v, label]) => '<option value="' + v + '"' + (l.exam === v ? " selected" : "") + ">" + label + "</option>").join("");
+    const tip = l.exam ? EXAMS[l.exam].label + ". Change exam type" : "Mark as a quiz, midterm or final";
+    return '<label class="icon-btn exam-pick' + (l.exam ? " set" : "") + '" title="' + tip + '">'
+      + '<span class="mi" aria-hidden="true">' + (l.exam ? "assignment_turned_in" : "assignment") + "</span>"
+      + '<select class="exam-select" id="exam-' + l.key + '" data-act="exam" data-id="' + esc(id) + '" data-key="' + l.key + '" aria-label="' + tip + '">' + opts + "</select></label>";
   }
 
   function studyHTML(id, l) {
@@ -1390,6 +1486,10 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
       $("#f-error").hidden = true;
       updatePreview();
     }
+  });
+  document.addEventListener("change", (e) => {
+    const sel = e.target.closest && e.target.closest(".exam-select");
+    if (sel) setExam(sel.dataset.id, sel.dataset.key, sel.value);
   });
   $("#f-start").addEventListener("input", updatePreview);
   $("#f-end").addEventListener("input", updatePreview);

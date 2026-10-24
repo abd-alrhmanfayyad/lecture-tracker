@@ -1,0 +1,1391 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lecture Tracker</title>
+<meta name="theme-color" content="#202d49">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Lectures">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+:root { color-scheme: light; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; font: 14px system-ui, sans-serif; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Roboto:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<style>
+/* Layout: the SMS dashboard shell. Navy sidebar listing the courses beside a light content area;
+   below 760px the sidebar becomes a drawer under a white top bar. */
+:root {
+  --bg: #f5f7fb;
+  --surface: #ffffff;
+  --surface-2: #f3f6fa;
+  --border: #e5e7eb;
+  --border-strong: #d1d5db;
+  --text: #111827;
+  --text-2: #374151;
+  --muted: #6b7280;
+  --faint: #9ca3af;
+  --primary: #2554a4;
+  --primary-hover: #1f478c;
+  --primary-soft: #eaf2ff;
+  --primary-ink: #2554a4;
+  --on-primary: #ffffff;
+  --focus: #2563eb;
+  --side-1: #202d49;
+  --side-2: #172238;
+  --side-glow-1: #33466f;
+  --side-glow-2: #2a3a5f;
+  --side-text: #94a3b8;
+  --side-text-strong: #e2e8f0;
+  --side-label: #64748b;
+  --side-hover: rgba(148, 163, 184, 0.12);
+  --side-active: #2554a4;
+  --side-icon-active: #38bdf8;
+  --ok: #166534;
+  --ok-soft: #f0fdf4;
+  --ok-border: #bbf7d0;
+  --bad: #b91c1c;
+  --bad-soft: #fef2f2;
+  --warn: #92400e;
+  --warn-soft: #fef3c7;
+  --warn-line: #f59e0b;
+  --shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+  --sheet-shadow: 0 24px 60px rgba(15, 23, 42, 0.22);
+  --scrim: rgba(15, 23, 42, 0.45);
+  --skeleton: #e9edf3;
+  --font: "Roboto", "IBM Plex Sans Arabic", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1524; --surface: #151f33; --surface-2: #1a2640; --border: #25324d; --border-strong: #33456a;
+    --text: #e6eaf2; --text-2: #c7cfdd; --muted: #94a3b8; --faint: #66758f;
+    --primary: #3b6fd4; --primary-hover: #4a7de0; --primary-soft: rgba(91, 141, 239, 0.16); --primary-ink: #9bbcff; --on-primary: #ffffff; --focus: #7aa7ff;
+    --side-1: #131c30; --side-2: #0c1322; --side-glow-1: #22314f; --side-glow-2: #1b2844;
+    --side-text: #94a3b8; --side-text-strong: #e2e8f0; --side-label: #64748b; --side-hover: rgba(148, 163, 184, 0.12);
+    --side-active: #2f5fb8; --side-icon-active: #38bdf8;
+    --ok: #86efac; --ok-soft: rgba(34, 197, 94, 0.12); --ok-border: rgba(34, 197, 94, 0.32);
+    --bad: #fca5a5; --bad-soft: rgba(239, 68, 68, 0.13);
+    --warn: #fcd34d; --warn-soft: rgba(245, 158, 11, 0.14); --warn-line: #f59e0b;
+    --shadow: 0 10px 24px rgba(0, 0, 0, 0.35); --sheet-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+    --scrim: rgba(2, 6, 15, 0.6); --skeleton: #1d2a44;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1524; --surface: #151f33; --surface-2: #1a2640; --border: #25324d; --border-strong: #33456a;
+  --text: #e6eaf2; --text-2: #c7cfdd; --muted: #94a3b8; --faint: #66758f;
+  --primary: #3b6fd4; --primary-hover: #4a7de0; --primary-soft: rgba(91, 141, 239, 0.16); --primary-ink: #9bbcff; --on-primary: #ffffff; --focus: #7aa7ff;
+  --side-1: #131c30; --side-2: #0c1322; --side-glow-1: #22314f; --side-glow-2: #1b2844;
+  --side-text: #94a3b8; --side-text-strong: #e2e8f0; --side-label: #64748b; --side-hover: rgba(148, 163, 184, 0.12);
+  --side-active: #2f5fb8; --side-icon-active: #38bdf8;
+  --ok: #86efac; --ok-soft: rgba(34, 197, 94, 0.12); --ok-border: rgba(34, 197, 94, 0.32);
+  --bad: #fca5a5; --bad-soft: rgba(239, 68, 68, 0.13);
+  --warn: #fcd34d; --warn-soft: rgba(245, 158, 11, 0.14); --warn-line: #f59e0b;
+  --shadow: 0 10px 24px rgba(0, 0, 0, 0.35); --sheet-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+  --scrim: rgba(2, 6, 15, 0.6); --skeleton: #1d2a44;
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+}
+body.modal-open { overflow: hidden; }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; background: none; border: 0; padding: 0; margin: 0; }
+button:disabled { cursor: default; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+h1, h2, h3 { text-wrap: balance; }
+
+.mi {
+  font-family: "Material Icons";
+  font-weight: normal;
+  font-style: normal;
+  font-size: 20px;
+  line-height: 1;
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  overflow: hidden;
+  white-space: nowrap;
+  letter-spacing: normal;
+  text-transform: none;
+  direction: ltr;
+  font-feature-settings: "liga";
+  -webkit-font-feature-settings: "liga";
+  flex-shrink: 0;
+  user-select: none;
+}
+.name { unicode-bidi: plaintext; text-align: left; }
+
+/* ---------- Shell ---------- */
+.shell {
+  display: flex;
+  min-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+}
+.sidebar {
+  width: 264px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-block: 20px 16px;
+  padding-left: max(12px, env(safe-area-inset-left, 0px));
+  padding-right: 12px;
+  background:
+    radial-gradient(circle at 15% 20%, var(--side-glow-1) 0%, transparent 40%),
+    radial-gradient(circle at 85% 80%, var(--side-glow-2) 0%, transparent 40%),
+    linear-gradient(135deg, var(--side-1), var(--side-2));
+  color: var(--side-text);
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: #475569 transparent;
+  z-index: 30;
+}
+.brand { display: flex; align-items: center; gap: 12px; padding: 2px 8px 18px; }
+.brand-mark {
+  width: 40px; height: 40px; border-radius: 12px;
+  background: var(--side-active);
+  display: grid; place-items: center;
+}
+.brand-mark .mi { color: var(--side-icon-active); font-size: 22px; }
+.brand-name { color: #ffffff; font-weight: 500; font-size: 16px; line-height: 1.2; }
+.brand-sub { font-size: 12px; color: var(--side-text); }
+.side-label {
+  font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--side-label); padding: 16px 14px 6px;
+}
+.menu-item {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%; min-width: 0;
+  padding: 11px 14px;
+  border-radius: 8px;
+  color: var(--side-text);
+  text-align: left;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.menu-item:hover { background: var(--side-hover); color: var(--side-text-strong); }
+.menu-item.active { background: var(--side-active); color: #ffffff; }
+.menu-item.active .mi { color: var(--side-icon-active); }
+.menu-item .dot {
+  width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+  background: var(--c);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
+}
+.menu-item .label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.menu-item .count { font-size: 12px; font-variant-numeric: tabular-nums; opacity: 0.8; }
+.side-courses { display: flex; flex-direction: column; gap: 2px; }
+.side-empty { margin: 0; padding: 4px 14px; font-size: 13px; color: var(--side-label); }
+.side-add {
+  margin-top: auto;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 11px;
+  border: 1px dashed rgba(148, 163, 184, 0.4);
+  border-radius: 10px;
+  color: var(--side-text-strong);
+  font-weight: 500; font-size: 14px;
+  transition: background 0.2s ease;
+}
+.side-add:hover { background: var(--side-hover); }
+.drawer-scrim { position: fixed; inset: 0; background: var(--scrim); z-index: 29; }
+
+.main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.topbar { display: none; }
+.content {
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding-block: 28px 24px;
+  padding-left: max(28px, env(safe-area-inset-left, 0px));
+  padding-right: max(28px, env(safe-area-inset-right, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  flex: 1;
+}
+.status {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding-block: 0 24px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  font-size: 12px; color: var(--faint);
+}
+.status .mi { font-size: 16px; }
+
+/* ---------- Page header ---------- */
+.page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.page-head > div { min-width: 0; }
+.eyebrow { margin: 0; font-size: 12px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+h1 { margin: 2px 0 0; font-size: 26px; font-weight: 700; line-height: 1.2; }
+.sub { color: var(--muted); margin: 4px 0 0; font-size: 14px; }
+.section-title { margin: 0 0 -8px; font-size: 16px; font-weight: 500; color: var(--text-2); }
+
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  height: 40px; padding: 0 16px;
+  border-radius: 10px;
+  font-weight: 500; font-size: 14px;
+  white-space: nowrap;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.btn .mi { font-size: 18px; }
+.btn-primary { background: var(--primary); color: var(--on-primary); }
+.btn-primary:hover { background: var(--primary-hover); }
+.btn-outline { border: 1px solid var(--border-strong); background: var(--surface); color: var(--text-2); }
+.btn-outline:hover { background: var(--surface-2); }
+.btn-quiet { color: var(--text-2); }
+.btn-quiet:hover { background: var(--surface-2); }
+.btn-danger { color: var(--bad); }
+.btn-danger:hover, .btn-danger.armed { background: var(--bad-soft); }
+.icon-btn {
+  width: 40px; height: 40px; flex-shrink: 0;
+  display: grid; place-items: center;
+  border-radius: 10px;
+  color: var(--muted);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.icon-btn:hover { background: var(--surface-2); color: var(--text); }
+
+/* ---------- Panels ---------- */
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+.panel-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 14px 18px; border-bottom: 1px solid var(--border);
+}
+.panel-head h2 { margin: 0; font-size: 15px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+.panel-head h2 .mi { color: var(--warn-line); }
+.panel-head small { color: var(--muted); font-size: 13px; }
+.panel-empty { display: flex; align-items: center; gap: 10px; padding: 18px; color: var(--muted); font-size: 14px; flex-wrap: wrap; }
+.panel-empty .mi { color: var(--faint); }
+.panel-empty b { color: var(--text); font-weight: 500; }
+
+/* ---------- Course cards ---------- */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 270px), 1fr)); gap: 18px; }
+.ccard {
+  display: flex; flex-direction: column;
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  text-align: left;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.ccard:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
+.ccard-head { display: flex; align-items: center; gap: 12px; padding: 16px 18px; background: var(--c); color: #ffffff; }
+.ccard-icon { width: 44px; height: 44px; border-radius: 12px; background: rgba(255, 255, 255, 0.22); display: grid; place-items: center; flex-shrink: 0; }
+.ccard-icon .mi { font-size: 24px; color: #ffffff; }
+.ccard-title { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ccard-name { font-size: 17px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ccard-days { font-size: 13px; opacity: 0.92; }
+.ccard-body { padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 14px; }
+.ccard-progress, .ccard-title > span { display: block; }
+.progress-row { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+.progress-row strong { color: var(--text); font-weight: 500; font-variant-numeric: tabular-nums; }
+.bar { display: block; height: 8px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.bar > i { display: block; height: 100%; border-radius: inherit; background: var(--c); transition: width 0.4s ease; }
+.meta { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.meta > span { background: var(--surface-2); border-radius: 10px; padding: 8px 10px; display: flex; flex-direction: column; min-width: 0; }
+.meta small { font-size: 12px; color: var(--muted); }
+.meta b { font-weight: 500; font-size: 14px; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ccard-add {
+  min-height: 200px;
+  border: 1.5px dashed var(--border-strong);
+  border-radius: 16px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  color: var(--muted); font-weight: 500;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.ccard-add:hover { background: var(--surface); color: var(--primary-ink); }
+.ccard-add .mi { font-size: 28px; }
+
+/* ---------- Course page ---------- */
+.back {
+  display: inline-flex; align-items: center; gap: 2px;
+  color: var(--primary-ink); font-weight: 500; font-size: 14px;
+  padding: 4px 8px 4px 2px; margin-left: -2px; margin-bottom: 8px;
+  border-radius: 8px;
+}
+.back:hover { background: var(--primary-soft); }
+.course-title { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.course-icon { width: 48px; height: 48px; border-radius: 12px; background: var(--c); display: grid; place-items: center; flex-shrink: 0; }
+.course-icon .mi { color: #ffffff; font-size: 26px; }
+.course-title > div { min-width: 0; }
+.course-title h1 { margin: 0; overflow-wrap: anywhere; }
+
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.stat {
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  min-width: 0;
+}
+.stat-icon { width: 44px; height: 44px; border-radius: 10px; display: grid; place-items: center; flex-shrink: 0; }
+.stat-icon .mi { font-size: 22px; }
+.t-blue { background: var(--primary-soft); color: var(--primary-ink); }
+.t-green { background: var(--ok-soft); color: var(--ok); }
+.t-amber { background: var(--warn-soft); color: var(--warn); }
+.t-red { background: var(--bad-soft); color: var(--bad); }
+.stat small { display: block; font-size: 13px; color: var(--muted); }
+.stat b { font-size: 24px; font-weight: 700; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.stat b em { font-style: normal; font-size: 14px; font-weight: 400; color: var(--muted); }
+.hint { margin: -8px 0 0; display: flex; gap: 8px; align-items: flex-start; font-size: 13px; color: var(--muted); }
+.hint .mi { font-size: 18px; color: var(--faint); margin-top: 1px; }
+
+/* ---------- Lecture rows ---------- */
+.week {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+  padding: 9px 18px;
+  background: var(--surface-2);
+  border-top: 1px solid var(--border);
+  font-size: 12px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--muted);
+}
+.week:first-child { border-top: 0; }
+.week span:last-child { text-transform: none; letter-spacing: 0; font-weight: 400; font-variant-numeric: tabular-nums; }
+.lec {
+  position: relative;
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+  border-top: 1px solid var(--border);
+}
+.panel-head + .lec { border-top: 0; }
+.num {
+  width: 34px; height: 34px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 13px; font-weight: 500; font-variant-numeric: tabular-nums;
+  background: var(--surface-2);
+  background: color-mix(in srgb, var(--c) 16%, var(--surface));
+  color: var(--text-2);
+  color: color-mix(in srgb, var(--c) 65%, var(--text));
+}
+.num .mi { font-size: 18px; }
+.lec-main { min-width: 0; }
+.lec-date { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-weight: 500; font-variant-numeric: tabular-nums; }
+.lec-sub { font-size: 13px; color: var(--muted); display: flex; gap: 6px; align-items: center; flex-wrap: wrap; min-width: 0; }
+.chip { font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 999px; letter-spacing: 0.02em; line-height: 1.5; }
+.chip-today { background: var(--warn-soft); color: var(--warn); }
+.chip-next { background: var(--primary-soft); color: var(--primary-ink); }
+.chip-off { background: var(--bad-soft); color: var(--bad); }
+.lec-title {
+  display: flex; align-items: center; gap: 6px;
+  max-width: 100%; min-height: 28px;
+  margin: 1px 0 0 -6px; padding: 0 6px;
+  border-radius: 6px;
+  font-size: 14px; color: var(--text-2);
+  text-align: left;
+}
+.lec-title:not(:disabled):hover { background: var(--surface-2); }
+.lec-title .t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lec-title .mi { font-size: 16px; color: var(--faint); opacity: 0; transition: opacity 0.15s ease; }
+.lec-title:hover .mi, .lec-title:focus-visible .mi, .lec-title.empty .mi { opacity: 1; }
+.lec-title.empty { color: var(--faint); }
+.title-input {
+  width: 100%; height: 34px; margin-top: 2px;
+  border: 1px solid var(--primary); border-radius: 8px;
+  padding: 0 10px;
+  background: var(--surface); color: var(--text);
+  font-size: 16px;
+  box-shadow: 0 0 0 3px var(--primary-soft);
+  outline: none;
+}
+.course-link { font-weight: 500; text-align: left; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
+.course-link:hover { color: var(--primary-ink); }
+.lec-actions { display: flex; align-items: center; gap: 4px; }
+.study {
+  display: inline-flex; align-items: stretch;
+  height: 38px;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--surface);
+}
+.study button {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 0 12px;
+  font-weight: 500; font-size: 14px;
+  color: var(--muted);
+  transition: background 0.15s ease;
+}
+.study button:hover { background: var(--surface-2); }
+.study .minus { padding: 0 8px; border-right: 1px solid var(--border); }
+.study .mi { font-size: 18px; }
+.study b { font-variant-numeric: tabular-nums; min-width: 1ch; }
+.study.done { border-color: var(--ok-border); background: var(--ok-soft); }
+.study.done button { color: var(--ok); }
+.study.done button:hover { background: rgba(34, 197, 94, 0.12); }
+.study.done .minus { border-right-color: var(--ok-border); }
+.study.bump b { animation: bump 0.35s ease; display: inline-block; }
+@keyframes bump { 0% { transform: scale(1); } 40% { transform: scale(1.45); } 100% { transform: scale(1); } }
+.lec.past .lec-date .d { color: var(--muted); }
+.lec.today { background: var(--warn-soft); }
+.lec.today::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--warn-line); }
+.lec.cancelled .lec-date .d,
+.lec.cancelled .lec-title .t,
+.lec.cancelled .lec-sub .t { text-decoration: line-through; color: var(--faint); }
+.lec.cancelled .num { background: var(--surface-2); color: var(--faint); }
+.lec.cancelled .lec-title .mi { display: none; }
+.dot-inline { width: 8px; height: 8px; border-radius: 50%; background: var(--c); display: inline-block; flex-shrink: 0; }
+
+/* ---------- Empty + loading ---------- */
+.empty {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 40px 24px;
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  text-align: center;
+}
+.empty-icon { width: 64px; height: 64px; border-radius: 18px; background: var(--primary-soft); color: var(--primary-ink); display: grid; place-items: center; }
+.empty-icon .mi { font-size: 32px; }
+.empty h2 { margin: 4px 0 0; font-size: 20px; font-weight: 500; }
+.empty p { margin: 0; max-width: 46ch; color: var(--muted); }
+.empty .btn { margin-top: 8px; }
+.how { list-style: none; margin: 16px 0 0; padding: 16px 0 0; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; text-align: left; font-size: 14px; color: var(--text-2); width: 100%; max-width: 380px; }
+.how li { display: flex; gap: 10px; align-items: center; }
+.how .mi { font-size: 18px; color: var(--primary-ink); }
+.skel { background: var(--skeleton); border-radius: 12px; animation: pulse 1.4s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: 0.55; } }
+
+/* ---------- Sheet (add / edit course) ---------- */
+.modal {
+  position: fixed; inset: 0; z-index: 50;
+  background: var(--scrim);
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+  padding-left: max(24px, env(safe-area-inset-left, 0px));
+  padding-right: max(24px, env(safe-area-inset-right, 0px));
+}
+.sheet {
+  width: 100%; max-width: 520px;
+  max-height: calc(100dvh - 48px);
+  overflow-y: auto;
+  background: var(--surface);
+  border-radius: 18px;
+  box-shadow: var(--sheet-shadow);
+}
+.sheet-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 16px 12px 4px 20px; }
+.sheet-head h2 { margin: 0; font-size: 18px; font-weight: 500; }
+.form { padding: 8px 20px 20px; display: flex; flex-direction: column; gap: 18px; }
+.field { display: flex; flex-direction: column; min-width: 0; }
+.field label, .field legend { display: block; font-size: 13px; font-weight: 500; color: var(--text-2); margin-bottom: 6px; padding: 0; }
+fieldset.field { border: 0; margin: 0; padding: 0; }
+.input {
+  width: 100%; min-width: 0; height: 44px;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  padding: 0 12px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 16px;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.input::placeholder { color: var(--faint); }
+.input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+input[type="date"].input { display: block; line-height: 42px; }
+input[type="date"]::-webkit-date-and-time-value { text-align: left; }
+.days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.day {
+  height: 42px;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  font-size: 13px; font-weight: 500;
+  color: var(--text-2);
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.day:hover { background: var(--surface-2); }
+.day[aria-pressed="true"] { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.swatches { display: flex; gap: 12px; flex-wrap: wrap; padding: 4px; }
+.swatch { position: relative; display: block; cursor: pointer; }
+.swatch input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
+.swatch span { display: block; width: 34px; height: 34px; border-radius: 50%; background: var(--c); transition: box-shadow 0.15s ease; }
+.swatch input:checked + span { box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px var(--c); }
+.swatch input:focus-visible + span { outline: 2px solid var(--focus); outline-offset: 6px; }
+.preview { margin: 0; display: flex; gap: 8px; align-items: center; padding: 10px 12px; border-radius: 10px; background: var(--primary-soft); color: var(--primary-ink); font-size: 14px; }
+.preview b { font-weight: 500; }
+.form-error { margin: 0; display: flex; gap: 8px; align-items: center; padding: 10px 12px; border-radius: 10px; background: var(--bad-soft); color: var(--bad); font-size: 14px; }
+.sheet-foot { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding-top: 4px; }
+.spacer { flex: 1; }
+
+/* ---------- Toast ---------- */
+.toast {
+  position: fixed; left: 50%; z-index: 60;
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  transform: translate(-50%, 12px);
+  max-width: calc(100% - 32px);
+  padding: 10px 16px;
+  border-radius: 10px;
+  background: var(--text); color: var(--bg);
+  font-size: 14px;
+  box-shadow: var(--shadow);
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1023px) {
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+}
+@media (max-width: 759px) {
+  body::before {
+    content: ""; position: fixed; inset: 0 0 auto;
+    height: env(safe-area-inset-top, 0px);
+    z-index: 25; background: var(--surface);
+  }
+  .sidebar {
+    position: fixed; top: 0; bottom: 0; left: 0;
+    height: auto;
+    width: min(300px, 86vw);
+    padding-top: calc(20px + env(safe-area-inset-top, 0px));
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    transform: translateX(-102%);
+    transition: transform 0.25s ease;
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.3);
+  }
+  .shell.drawer-open .sidebar { transform: none; }
+  .topbar {
+    display: flex; align-items: center; gap: 8px;
+    position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
+    min-height: 60px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    border-radius: 0 0 15px 15px;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+  }
+  .topbar .icon-btn { margin: 0 -8px; }
+  .topbar-title { flex: 1; min-width: 0; font-weight: 500; font-size: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; padding: 0 8px; }
+  .content {
+    padding-block: 20px 20px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    gap: 20px;
+  }
+  .head-action { display: none; }
+  h1 { font-size: 22px; }
+}
+@media (max-width: 599px) {
+  .modal { align-items: flex-end; padding: 0; }
+  .sheet {
+    max-width: none; max-height: 92dvh;
+    border-radius: 18px 18px 0 0;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+}
+@media (max-width: 519px) {
+  .study .lbl { display: none; }
+  .lec { gap: 10px; padding: 12px 14px; }
+  .week { padding: 9px 14px; }
+  .stat { padding: 12px; gap: 10px; }
+  .stat-icon { width: 38px; height: 38px; }
+  .stat b { font-size: 20px; }
+  .ccard-head { padding: 14px 16px; }
+  .ccard-body { padding: 14px 16px 16px; }
+}
+@media (max-width: 420px) {
+  .two { grid-template-columns: 1fr; }
+  .day { font-size: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="shell" id="shell">
+  <aside class="sidebar" id="sidebar" aria-label="Courses">
+    <div class="brand">
+      <span class="brand-mark"><span class="mi" aria-hidden="true">auto_stories</span></span>
+      <div>
+        <div class="brand-name">Lecture Tracker</div>
+        <div class="brand-sub">Courses and study log</div>
+      </div>
+    </div>
+    <button class="menu-item" id="nav-home" data-act="home"><span class="mi" aria-hidden="true">dashboard</span><span class="label">Overview</span></button>
+    <div class="side-label">Courses</div>
+    <nav class="side-courses" id="side-courses" aria-label="Your courses"></nav>
+    <button class="side-add" data-act="new"><span class="mi" aria-hidden="true">add</span>New course</button>
+  </aside>
+  <div class="drawer-scrim" id="drawer-scrim" data-act="close-drawer" hidden></div>
+  <div class="main">
+    <header class="topbar">
+      <button class="icon-btn" data-act="drawer" aria-label="Open the courses menu"><span class="mi" aria-hidden="true">menu</span></button>
+      <span class="topbar-title name" id="topbar-title" dir="auto">Overview</span>
+      <button class="icon-btn" id="topbar-action" data-act="topbar" aria-label="New course"><span class="mi" aria-hidden="true">add</span></button>
+    </header>
+    <main class="content" id="content"></main>
+    <footer class="status" id="store-status"></footer>
+  </div>
+</div>
+
+<div class="modal" id="modal" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+    <div class="sheet-head">
+      <h2 id="sheet-title">New course</h2>
+      <button class="icon-btn" type="button" data-form="close" aria-label="Close"><span class="mi" aria-hidden="true">close</span></button>
+    </div>
+    <form class="form" id="course-form" novalidate>
+      <div class="field">
+        <label for="f-name">Course name</label>
+        <input class="input" id="f-name" dir="auto" maxlength="60" autocomplete="off" placeholder="e.g. قواعد البيانات">
+      </div>
+      <fieldset class="field">
+        <legend>Lecture days</legend>
+        <div class="days" id="f-days"></div>
+      </fieldset>
+      <div class="two">
+        <div class="field">
+          <label for="f-start">First day of teaching</label>
+          <input class="input" type="date" id="f-start">
+        </div>
+        <div class="field">
+          <label for="f-end">Last day of teaching</label>
+          <input class="input" type="date" id="f-end">
+        </div>
+      </div>
+      <fieldset class="field">
+        <legend>Color</legend>
+        <div class="swatches" id="f-colors"></div>
+      </fieldset>
+      <p class="preview" id="f-preview" aria-live="polite"></p>
+      <p class="form-error" id="f-error" role="alert" hidden></p>
+      <div class="sheet-foot">
+        <button class="btn btn-danger" type="button" id="f-delete" hidden></button>
+        <span class="spacer"></span>
+        <button class="btn btn-quiet" type="button" data-form="close">Cancel</button>
+        <button class="btn btn-primary" type="submit" id="f-submit">Add course</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script>
+(() => {
+  "use strict";
+
+  /* ---------- Constants ---------- */
+  const DAY = 86400000;
+  const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  // The SMS subject colors, deepened a little so white text on them stays readable.
+  const COLORS = [
+    { id: "blue", hex: "#4f7fe0", label: "Blue" },
+    { id: "coral", hex: "#d9724a", label: "Coral" },
+    { id: "teal", hex: "#3a9e94", label: "Teal" },
+    { id: "rose", hex: "#c45b8f", label: "Rose" },
+    { id: "lavender", hex: "#7d6ad8", label: "Lavender" },
+    { id: "mustard", hex: "#b8891f", label: "Mustard" }
+  ];
+  const LS_DATA = "lecture-tracker:v1";
+  const LS_VIEW = "lecture-tracker:view";
+  const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ---------- State ---------- */
+  const state = { courses: {}, ready: false, view: "home", courseId: null, drawer: false, pending: false, refocus: null, bump: null };
+  const store = {
+    mode: "loading", // "db" | "local"
+    col: null,
+    dirty: new Set(), inflight: new Set(), again: new Set(), deleted: new Set(),
+    timers: {}, readOnly: false, warnedLocal: false
+  };
+
+  /* ---------- Helpers ---------- */
+  const $ = (s) => document.querySelector(s);
+  const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+  const pad = (n) => String(n).padStart(2, "0");
+  const KEY_RE = /^\d{4}-\d{2}-\d{2}$/;
+  function todayKey() { const d = new Date(); return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+  function parseKey(s) { if (!KEY_RE.test(s || "")) return NaN; const [y, m, d] = s.split("-").map(Number); return Date.UTC(y, m - 1, d); }
+  function keyOf(t) { return new Date(t).toISOString().slice(0, 10); }
+  function fmt(t, opts) { return new Date(t).toLocaleDateString("en-GB", Object.assign({ timeZone: "UTC" }, opts)); }
+  const fmtDay = (t) => fmt(t, { weekday: "short", day: "numeric", month: "short" });
+  const fmtDM = (t) => fmt(t, { day: "numeric", month: "short" });
+  const fmtDMY = (t) => fmt(t, { day: "numeric", month: "short", year: "numeric" });
+  function fmtRange(a, b) {
+    return new Date(a).getUTCFullYear() === new Date(b).getUTCFullYear() ? fmtDM(a) + " – " + fmtDMY(b) : fmtDMY(a) + " – " + fmtDMY(b);
+  }
+  function colorOf(c) { return (COLORS.find((x) => x.id === c.color) || COLORS[0]).hex; }
+  function daysLabel(days) { return days.slice().sort((a, b) => a - b).map((d) => DAY_NAMES[d]).join(" · "); }
+  function plural(n, word) { return n + " " + word + (n === 1 ? "" : "s"); }
+
+  /* ---------- Lectures ---------- */
+  // One lecture for every chosen weekday between the first and last day of teaching.
+  function lecturesOf(c) {
+    const out = [];
+    const s = parseKey(c.start), e = parseKey(c.end);
+    if (isNaN(s) || isNaN(e) || e < s || !c.days.length) return out;
+    const firstSunday = s - new Date(s).getUTCDay() * DAY;
+    let num = 0;
+    for (let t = s; t <= e && out.length < 500; t += DAY) {
+      const wd = new Date(t).getUTCDay();
+      if (!c.days.includes(wd)) continue;
+      const key = keyOf(t);
+      const m = c.marks[key] || {};
+      const off = !!m.x;
+      const weekIndex = Math.floor((t - firstSunday) / (7 * DAY));
+      out.push({
+        key, t, wd,
+        week: weekIndex + 1,
+        weekStart: firstSunday + weekIndex * 7 * DAY,
+        title: m.t || "",
+        off,
+        n: off ? 0 : (m.n || 0),
+        num: off ? null : ++num
+      });
+    }
+    return out;
+  }
+  function statsOf(lecs) {
+    const tk = todayKey();
+    let total = 0, held = 0, studied = 0, off = 0, next = null, today = null;
+    for (const l of lecs) {
+      if (l.key === tk) today = l;
+      if (l.off) { off++; continue; }
+      total++;
+      if (l.key <= tk) held++;
+      if (l.n > 0) studied++;
+      if (!next && l.key > tk) next = l;
+    }
+    return { total, held, studied, off, next, today };
+  }
+
+  /* ---------- Data shape ---------- */
+  function normalize(id, d) {
+    d = d || {};
+    const marks = {};
+    if (d.marks && typeof d.marks === "object") {
+      for (const [k, v] of Object.entries(d.marks)) {
+        if (!KEY_RE.test(k) || !v || typeof v !== "object") continue;
+        marks[k] = { t: typeof v.t === "string" ? v.t.slice(0, 120) : "", x: !!v.x, n: Math.max(0, Math.min(99, Math.floor(Number(v.n) || 0))) };
+      }
+    }
+    const days = Array.isArray(d.days) ? [...new Set(d.days.map(Number).filter((n) => Number.isInteger(n) && n >= 0 && n <= 6))] : [];
+    return {
+      id,
+      name: String(d.name || "Untitled course").slice(0, 60),
+      color: COLORS.some((c) => c.id === d.color) ? d.color : "blue",
+      days,
+      start: KEY_RE.test(d.start || "") ? d.start : "",
+      end: KEY_RE.test(d.end || "") ? d.end : "",
+      createdAt: Number(d.createdAt) || 0,
+      marks
+    };
+  }
+  function toDoc(c) {
+    const marks = {};
+    for (const [k, v] of Object.entries(c.marks)) {
+      if (v.t || v.x || v.n) marks[k] = { t: v.t || "", x: !!v.x, n: v.n || 0 };
+    }
+    return { name: c.name, color: c.color, days: c.days, start: c.start, end: c.end, createdAt: c.createdAt, marks };
+  }
+  function courseList() {
+    return Object.values(state.courses).sort((a, b) => (a.createdAt - b.createdAt) || a.name.localeCompare(b.name));
+  }
+
+  /* ---------- Saving ---------- */
+  async function initStore() {
+    let db = null, user = null, uid = null;
+    try {
+      if (window.claude && typeof window.claude.use === "function") {
+        [db, user] = await Promise.all([window.claude.use("db"), window.claude.use("user")]);
+      }
+    } catch (e) { db = null; }
+    if (db && user) { try { uid = await user.id(); } catch (e) { uid = null; } }
+    if (db && uid) {
+      store.mode = "db";
+      store.col = db.collection("data/users/" + uid);
+      subscribe(false);
+    } else {
+      store.mode = "local";
+      loadLocal();
+      state.ready = true;
+      render();
+    }
+  }
+  function subscribe(isRetry) {
+    store.col.onSnapshot((snap) => {
+      const seen = new Set();
+      for (const d of snap.docs) {
+        seen.add(d.id);
+        if (store.deleted.has(d.id) || store.dirty.has(d.id) || store.inflight.has(d.id)) continue;
+        state.courses[d.id] = normalize(d.id, d.data());
+      }
+      for (const id of Object.keys(state.courses)) {
+        if (!seen.has(id) && !store.dirty.has(id) && !store.inflight.has(id)) delete state.courses[id];
+      }
+      state.ready = true;
+      render();
+    }, (err) => {
+      if (err && err.code === "unavailable" && !isRetry) { setTimeout(() => subscribe(true), 1500 + Math.random() * 1500); return; }
+      state.ready = true;
+      render();
+      toast("Your courses can't be loaded right now. Reload the page to try again.");
+    });
+  }
+  function touch(id) {
+    if (store.mode === "local") { saveLocal(); return; }
+    if (store.mode !== "db") return;
+    store.dirty.add(id);
+    clearTimeout(store.timers[id]);
+    store.timers[id] = setTimeout(() => flush(id), 450);
+  }
+  async function flush(id, retried) {
+    clearTimeout(store.timers[id]); delete store.timers[id];
+    if (store.inflight.has(id)) { store.again.add(id); return; }
+    if (!store.dirty.has(id)) return;
+    store.dirty.delete(id);
+    store.inflight.add(id);
+    let failed = null;
+    try {
+      const c = state.courses[id];
+      if (c) await store.col.doc(id).set(toDoc(c));
+      else await store.col.doc(id).delete();
+    } catch (e) { failed = e || { code: "unavailable" }; }
+    store.inflight.delete(id);
+    if (failed) {
+      if (failed.code === "unavailable" && !retried) {
+        store.dirty.add(id);
+        setTimeout(() => flush(id, true), 800 + Math.random() * 1200);
+        return;
+      }
+      writeError(failed.code);
+    }
+    if (store.again.has(id)) { store.again.delete(id); store.dirty.add(id); flush(id); }
+  }
+  function flushAll() { for (const id of Object.keys(store.timers)) flush(id); }
+  function writeError(code) {
+    if (code === "invalid_argument" || code === "not_granted") {
+      if (!store.readOnly) { store.readOnly = true; toast("You can view this page but not change it, so changes won't be saved."); }
+    } else if (code === "quota_exceeded") {
+      toast("Storage is full. Delete a course you no longer need, then try again.");
+    } else {
+      toast("A change didn't save. Check your connection and try again.");
+    }
+  }
+  function loadLocal() {
+    try {
+      const raw = localStorage.getItem(LS_DATA);
+      if (!raw) return;
+      const obj = JSON.parse(raw) || {};
+      for (const [id, d] of Object.entries(obj)) state.courses[id] = normalize(id, d);
+    } catch (e) { /* nothing saved */ }
+  }
+  function saveLocal() {
+    try {
+      const obj = {};
+      for (const c of Object.values(state.courses)) obj[c.id] = toDoc(c);
+      localStorage.setItem(LS_DATA, JSON.stringify(obj));
+    } catch (e) {
+      if (!store.warnedLocal) { store.warnedLocal = true; toast("This browser isn't keeping data, so changes will be lost when you close the page."); }
+    }
+  }
+
+  /* ---------- Changes ---------- */
+  function mark(c, key) { return c.marks[key] || (c.marks[key] = { t: "", x: false, n: 0 }); }
+  function study(id, key, delta) {
+    const c = state.courses[id]; if (!c) return;
+    const m = mark(c, key);
+    if (m.x) return;
+    const next = Math.max(0, Math.min(99, (m.n || 0) + delta));
+    if (next === m.n) return;
+    m.n = next;
+    state.bump = delta > 0 ? key : null;
+    touch(id);
+    render();
+  }
+  function toggleOff(id, key) {
+    const c = state.courses[id]; if (!c) return;
+    const m = mark(c, key);
+    m.x = !m.x;
+    touch(id);
+    render();
+    toast(m.x ? "Lecture marked as cancelled" : "Lecture restored");
+  }
+
+  /* ---------- Navigation ---------- */
+  function go(view, id) {
+    state.view = view;
+    state.courseId = view === "course" ? id : null;
+    state.drawer = false;
+    syncDrawer();
+    try { localStorage.setItem(LS_VIEW, JSON.stringify({ view: state.view, id: state.courseId })); } catch (e) { /* ignore */ }
+    render();
+    window.scrollTo(0, 0);
+    if (view === "course") {
+      requestAnimationFrame(() => {
+        const row = document.getElementById("focus-row");
+        if (row && row.getBoundingClientRect().top > window.innerHeight * 0.7) {
+          row.scrollIntoView({ block: "center", behavior: reduceMotion ? "auto" : "smooth" });
+        }
+      });
+    }
+  }
+  function syncDrawer() {
+    $("#shell").classList.toggle("drawer-open", state.drawer);
+    $("#drawer-scrim").hidden = !state.drawer;
+  }
+
+  /* ---------- Rendering ---------- */
+  function isEditing() { const a = document.activeElement; return !!(a && a.dataset && a.dataset.editing === "1"); }
+  function render() {
+    if (isEditing()) { state.pending = true; return; }
+    state.pending = false;
+    if (state.ready && state.view === "course" && !state.courses[state.courseId]) { state.view = "home"; state.courseId = null; }
+    const course = state.view === "course" ? state.courses[state.courseId] : null;
+
+    $("#side-courses").innerHTML = sidebarHTML();
+    $("#nav-home").classList.toggle("active", state.view === "home");
+    $("#topbar-title").textContent = course ? course.name : "Overview";
+    const action = $("#topbar-action");
+    action.innerHTML = '<span class="mi" aria-hidden="true">' + (course ? "edit" : "add") + "</span>";
+    action.setAttribute("aria-label", course ? "Edit course" : "New course");
+    action.hidden = !state.ready;
+
+    $("#content").innerHTML = !state.ready ? loadingHTML() : course ? courseHTML(course) : homeHTML();
+    $("#store-status").innerHTML = statusHTML();
+    state.bump = null;
+
+    if (state.refocus) {
+      const { act, id, key } = state.refocus;
+      state.refocus = null;
+      const target = document.querySelector('[data-act="' + act + '"][data-id="' + id + '"][data-key="' + key + '"]')
+        || document.querySelector('[data-act="study"][data-id="' + id + '"][data-key="' + key + '"]')
+        || document.querySelector('[data-act="off"][data-id="' + id + '"][data-key="' + key + '"]');
+      if (target) target.focus({ preventScroll: true });
+    }
+  }
+
+  function sidebarHTML() {
+    if (!state.ready) return '<p class="side-empty">Loading…</p>';
+    const list = courseList();
+    if (!list.length) return '<p class="side-empty">No courses yet</p>';
+    return list.map((c) => {
+      const s = statsOf(lecturesOf(c));
+      const active = state.view === "course" && state.courseId === c.id;
+      return '<button class="menu-item' + (active ? " active" : "") + '" data-act="open" data-id="' + esc(c.id) + '" style="--c:' + colorOf(c) + '"' + (active ? ' aria-current="page"' : "") + '>'
+        + '<span class="dot"></span><span class="label name" dir="auto">' + esc(c.name) + '</span>'
+        + '<span class="count" aria-label="' + s.studied + ' of ' + s.total + ' studied">' + s.studied + "/" + s.total + "</span></button>";
+    }).join("");
+  }
+
+  function statusHTML() {
+    if (store.mode === "db") return '<span class="mi" aria-hidden="true">cloud_done</span>Saved to your Claude account';
+    if (store.mode === "local") return '<span class="mi" aria-hidden="true">smartphone</span>Saved on this device';
+    return "";
+  }
+
+  function loadingHTML() {
+    return '<div class="page-head"><div><div class="skel" style="width:140px;height:14px"></div><div class="skel" style="width:200px;height:28px;margin-top:8px"></div></div></div>'
+      + '<div class="skel" style="height:96px"></div>'
+      + '<div class="grid"><div class="skel" style="height:220px"></div><div class="skel" style="height:220px"></div></div>'
+      + '<p class="sub" style="text-align:center">Loading your courses…</p>';
+  }
+
+  function emptyHTML() {
+    return '<section class="empty">'
+      + '<span class="empty-icon"><span class="mi" aria-hidden="true">school</span></span>'
+      + "<h2>Add your first course</h2>"
+      + "<p>Enter the course name, your lecture days, and the first and last day of teaching. The lecture list fills in by itself, one row for each lecture with its date.</p>"
+      + '<button class="btn btn-primary" data-act="new"><span class="mi" aria-hidden="true">add</span>Add a course</button>'
+      + '<ul class="how">'
+      + '<li><span class="mi" aria-hidden="true">check</span>Tick a lecture every time you study it</li>'
+      + '<li><span class="mi" aria-hidden="true">event_busy</span>Strike out lectures that get cancelled</li>'
+      + '<li><span class="mi" aria-hidden="true">edit</span>Give each lecture a title, like the chapter it covers</li>'
+      + "</ul></section>";
+  }
+
+  function homeHTML() {
+    const list = courseList();
+    const tk = todayKey();
+    const head = '<header class="page-head"><div><p class="eyebrow">' + esc(fmt(parseKey(tk), { weekday: "long", day: "numeric", month: "long", year: "numeric" })) + "</p><h1>Overview</h1></div>"
+      + (list.length ? '<button class="btn btn-primary head-action" data-act="new"><span class="mi" aria-hidden="true">add</span>New course</button>' : "")
+      + "</header>";
+    if (!list.length) return head + emptyHTML();
+
+    const todays = [];
+    let nextAll = null;
+    for (const c of list) {
+      for (const l of lecturesOf(c)) {
+        if (l.key === tk) todays.push({ c, l });
+        if (!l.off && l.key > tk && (!nextAll || l.key < nextAll.l.key)) nextAll = { c, l };
+      }
+    }
+    let today = '<section class="panel" aria-labelledby="today-h"><div class="panel-head"><h2 id="today-h"><span class="mi" aria-hidden="true">wb_sunny</span>Today</h2>'
+      + "<small>" + (todays.length ? plural(todays.filter((x) => !x.l.off).length, "lecture") : "") + "</small></div>";
+    if (todays.length) {
+      today += todays.map(({ c, l }) => todayRowHTML(c, l)).join("");
+    } else {
+      today += '<div class="panel-empty"><span class="mi" aria-hidden="true">event_available</span><span>No lectures today.</span>'
+        + (nextAll ? '<span>Next: <b>' + esc(fmtDay(nextAll.l.t)) + '</b>, <span class="name" dir="auto">' + esc(nextAll.c.name) + "</span></span>" : "")
+        + "</div>";
+    }
+    today += "</section>";
+
+    const cards = '<h2 class="section-title">Your courses</h2><div class="grid">' + list.map(cardHTML).join("")
+      + '<button class="ccard-add" data-act="new"><span class="mi" aria-hidden="true">add_circle_outline</span>Add a course</button></div>';
+    return head + today + cards;
+  }
+
+  function todayRowHTML(c, l) {
+    return '<div class="lec' + (l.off ? " cancelled" : "") + '" style="--c:' + colorOf(c) + '">'
+      + '<span class="num">' + (l.off ? '<span class="mi" aria-hidden="true">event_busy</span>' : l.num) + "</span>"
+      + '<div class="lec-main"><button class="course-link name" dir="auto" data-act="open" data-id="' + esc(c.id) + '">' + esc(c.name) + "</button>"
+      + '<div class="lec-sub">' + (l.off ? '<span class="chip chip-off">Cancelled</span>' : "<span>Lecture " + l.num + "</span>")
+      + (l.title ? '<span aria-hidden="true">·</span><span class="t name" dir="auto">' + esc(l.title) + "</span>" : "") + "</div></div>"
+      + '<div class="lec-actions">' + (l.off ? "" : studyHTML(c.id, l)) + "</div></div>";
+  }
+
+  function cardHTML(c) {
+    const lecs = lecturesOf(c), s = statsOf(lecs);
+    const pct = s.total ? Math.round((s.studied / s.total) * 100) : 0;
+    const nextTxt = s.today && !s.today.off ? "Today" : s.next ? fmtDay(s.next.t) : s.total ? "Finished" : "None";
+    return '<button class="ccard" data-act="open" data-id="' + esc(c.id) + '" style="--c:' + colorOf(c) + '">'
+      + '<span class="ccard-head"><span class="ccard-icon"><span class="mi" aria-hidden="true">menu_book</span></span>'
+      + '<span class="ccard-title"><span class="ccard-name name" dir="auto">' + esc(c.name) + '</span><span class="ccard-days">' + esc(daysLabel(c.days)) + "</span></span></span>"
+      + '<span class="ccard-body"><span class="ccard-progress"><span class="progress-row"><span>Studied</span><span><strong>' + s.studied + "</strong> of " + s.total + "</span></span>"
+      + '<span class="bar" role="img" aria-label="' + pct + '% of lectures studied"><i style="width:' + pct + '%"></i></span></span>'
+      + '<span class="meta"><span><small>Held so far</small><b>' + s.held + '</b></span><span><small>Next lecture</small><b>' + esc(nextTxt) + "</b></span></span>"
+      + "</span></button>";
+  }
+
+  function courseHTML(c) {
+    const lecs = lecturesOf(c), s = statsOf(lecs), tk = todayKey();
+    const color = colorOf(c);
+    const focusKey = s.today ? s.today.key : s.next ? s.next.key : null;
+    const range = parseKey(c.start) && parseKey(c.end) ? fmtRange(parseKey(c.start), parseKey(c.end)) : "";
+
+    let html = '<header class="page-head" style="--c:' + color + '"><div>'
+      + '<button class="back" data-act="home"><span class="mi" aria-hidden="true">chevron_left</span>All courses</button>'
+      + '<div class="course-title"><span class="course-icon"><span class="mi" aria-hidden="true">menu_book</span></span><div>'
+      + '<h1 class="name" dir="auto">' + esc(c.name) + '</h1><p class="sub">' + esc(daysLabel(c.days)) + (range ? " · " + esc(range) : "") + "</p></div></div></div>"
+      + '<button class="btn btn-outline head-action" data-act="edit" data-id="' + esc(c.id) + '"><span class="mi" aria-hidden="true">edit</span>Edit course</button>'
+      + "</header>";
+
+    html += '<div class="stats">'
+      + statHTML("event_note", "t-blue", "Lectures", String(s.total))
+      + statHTML("history", "t-amber", "Held so far", String(s.held))
+      + statHTML("task_alt", "t-green", "Studied", s.studied + " <em>/ " + s.total + "</em>")
+      + statHTML("event_busy", "t-red", "Cancelled", String(s.off))
+      + "</div>";
+
+    if (!lecs.length) {
+      html += '<section class="panel"><div class="panel-empty"><span class="mi" aria-hidden="true">info</span><span>None of your lecture days fall between these dates. Edit the course to fix the days or dates.</span></div></section>';
+      return html;
+    }
+
+    html += '<p class="hint"><span class="mi" aria-hidden="true">info</span><span>Tap the check every time you study a lecture, and the number counts how many times. Tap the calendar icon to strike out a cancelled lecture.</span></p>';
+
+    let rows = "", week = null;
+    for (const l of lecs) {
+      if (l.week !== week) {
+        week = l.week;
+        rows += '<div class="week"><span>Week ' + l.week + "</span><span>" + esc(fmtDM(l.weekStart)) + " – " + esc(fmtDM(l.weekStart + 6 * DAY)) + "</span></div>";
+      }
+      rows += lecHTML(c, l, tk, focusKey);
+    }
+    html += '<section class="panel" aria-label="Lectures" style="--c:' + color + '">' + rows + "</section>";
+    return html;
+  }
+
+  function statHTML(icon, tone, label, value) {
+    return '<div class="stat"><span class="stat-icon ' + tone + '"><span class="mi" aria-hidden="true">' + icon + "</span></span>"
+      + "<div><small>" + label + "</small><b>" + value + "</b></div></div>";
+  }
+
+  function lecHTML(c, l, tk, focusKey) {
+    const cls = ["lec"];
+    if (l.off) cls.push("cancelled");
+    if (l.key === tk) cls.push("today"); else if (l.key < tk) cls.push("past");
+    const chips = (l.key === tk ? '<span class="chip chip-today">Today</span>' : "")
+      + (!l.off && l.key === focusKey && l.key !== tk ? '<span class="chip chip-next">Next</span>' : "")
+      + (l.off ? '<span class="chip chip-off">Cancelled</span>' : "");
+    const id = esc(c.id);
+    const title = l.off
+      ? (l.title ? '<div class="lec-sub"><span class="t name" dir="auto">' + esc(l.title) + "</span></div>" : "")
+      : '<button class="lec-title' + (l.title ? "" : " empty") + '" data-act="title" data-id="' + id + '" data-key="' + l.key + '"'
+        + ' aria-label="' + (l.title ? "Edit title: " + esc(l.title) : "Add a title") + '">'
+        + '<span class="t name" dir="auto">' + (l.title ? esc(l.title) : "Add a title") + '</span><span class="mi" aria-hidden="true">edit</span></button>';
+    return '<div class="' + cls.join(" ") + '"' + (l.key === focusKey ? ' id="focus-row"' : "") + ">"
+      + '<span class="num" aria-label="' + (l.off ? "Cancelled" : "Lecture " + l.num) + '">' + (l.off ? "–" : l.num) + "</span>"
+      + '<div class="lec-main"><div class="lec-date"><span class="d">' + esc(fmtDay(l.t)) + "</span>" + chips + "</div>" + title + "</div>"
+      + '<div class="lec-actions">' + (l.off ? "" : studyHTML(c.id, l))
+      + '<button class="icon-btn" data-act="off" data-id="' + id + '" data-key="' + l.key + '" aria-label="' + (l.off ? "Restore this lecture" : "Mark as cancelled") + '" title="' + (l.off ? "Restore this lecture" : "Mark as cancelled") + '">'
+      + '<span class="mi" aria-hidden="true">' + (l.off ? "undo" : "event_busy") + "</span></button></div></div>";
+  }
+
+  function studyHTML(id, l) {
+    const eid = esc(id);
+    if (!l.n) {
+      return '<div class="study"><button data-act="study" data-id="' + eid + '" data-key="' + l.key + '" aria-label="Mark as studied" title="Mark as studied">'
+        + '<span class="mi" aria-hidden="true">check</span><span class="lbl">Studied</span></button></div>';
+    }
+    return '<div class="study done' + (state.bump === l.key ? " bump" : "") + '">'
+      + '<button class="minus" data-act="unstudy" data-id="' + eid + '" data-key="' + l.key + '" aria-label="Remove one check" title="Remove one check"><span class="mi" aria-hidden="true">remove</span></button>'
+      + '<button data-act="study" data-id="' + eid + '" data-key="' + l.key + '" aria-label="Studied ' + plural(l.n, "time") + '. Add another check" title="Add another check">'
+      + '<span class="mi" aria-hidden="true">check</span><b>' + l.n + "</b></button></div>";
+  }
+
+  /* ---------- Inline title editing ---------- */
+  function startTitleEdit(btn) {
+    const { id, key } = btn.dataset;
+    const c = state.courses[id]; if (!c) return;
+    const current = (c.marks[key] && c.marks[key].t) || "";
+    const input = document.createElement("input");
+    input.className = "title-input";
+    input.id = "title-" + key;
+    input.value = current;
+    input.dir = "auto";
+    input.maxLength = 120;
+    input.placeholder = "e.g. Chapter 3: Normalization";
+    input.setAttribute("aria-label", "Lecture title");
+    input.dataset.editing = "1";
+    btn.replaceWith(input);
+    input.focus();
+    let done = false;
+    const finish = (save) => {
+      if (done) return;
+      done = true;
+      delete input.dataset.editing;
+      if (save) {
+        const v = input.value.trim().slice(0, 120);
+        if (v !== current) { mark(c, key).t = v; touch(id); }
+      }
+      render();
+    };
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") { e.preventDefault(); finish(true); }
+      else if (e.key === "Escape") { e.preventDefault(); finish(false); }
+    });
+    input.addEventListener("blur", () => finish(true));
+  }
+
+  /* ---------- Add / edit sheet ---------- */
+  let form = null;
+  let lastFocus = null;
+  function buildFormControls() {
+    $("#f-days").innerHTML = DAY_NAMES.map((d, i) => '<button type="button" class="day" data-day="' + i + '" aria-pressed="false">' + d + "</button>").join("");
+    $("#f-colors").innerHTML = COLORS.map((c) => '<label class="swatch" style="--c:' + c.hex + '" title="' + c.label + '">'
+      + '<input type="radio" name="f-color" id="f-color-' + c.id + '" value="' + c.id + '" aria-label="' + c.label + '"><span></span></label>').join("");
+  }
+  function freeColor() {
+    const used = new Set(Object.values(state.courses).map((c) => c.color));
+    const free = COLORS.find((c) => !used.has(c.id));
+    return free ? free.id : COLORS[Object.keys(state.courses).length % COLORS.length].id;
+  }
+  function openForm(id) {
+    const c = id ? state.courses[id] : null;
+    const last = courseList().slice(-1)[0];
+    form = { id: c ? c.id : null, days: new Set(c ? c.days : []), confirmDelete: false };
+    state.drawer = false; syncDrawer();
+    lastFocus = document.activeElement;
+    $("#sheet-title").textContent = c ? "Edit course" : "New course";
+    $("#f-name").value = c ? c.name : "";
+    // Courses in one semester share dates, so a new course starts from the last one's dates.
+    $("#f-start").value = c ? c.start : (last ? last.start : "");
+    $("#f-end").value = c ? c.end : (last ? last.end : "");
+    document.querySelectorAll("#f-days .day").forEach((b) => b.setAttribute("aria-pressed", String(form.days.has(Number(b.dataset.day)))));
+    const color = c ? c.color : freeColor();
+    const radio = document.getElementById("f-color-" + color);
+    if (radio) radio.checked = true;
+    const del = $("#f-delete");
+    del.hidden = !c;
+    del.classList.remove("armed");
+    del.innerHTML = '<span class="mi" aria-hidden="true">delete</span>Delete course';
+    $("#f-submit").textContent = c ? "Save changes" : "Add course";
+    $("#f-error").hidden = true;
+    updatePreview();
+    $("#modal").hidden = false;
+    document.body.classList.add("modal-open");
+    if (!c && window.matchMedia("(min-width: 760px)").matches) setTimeout(() => $("#f-name").focus(), 30);
+  }
+  function closeForm() {
+    $("#modal").hidden = true;
+    document.body.classList.remove("modal-open");
+    form = null;
+    if (lastFocus && document.contains(lastFocus)) lastFocus.focus({ preventScroll: true });
+  }
+  function updatePreview() {
+    if (!form) return;
+    const p = $("#f-preview");
+    const start = $("#f-start").value, end = $("#f-end").value;
+    const existing = form.id ? state.courses[form.id] : null;
+    const draft = { days: [...form.days], start, end, marks: existing ? existing.marks : {} };
+    if (!draft.days.length || !start || !end) {
+      p.innerHTML = '<span class="mi" aria-hidden="true">info</span><span>Pick your lecture days and the semester dates to see how many lectures you\'ll have.</span>';
+      return;
+    }
+    if (parseKey(end) < parseKey(start)) {
+      p.innerHTML = '<span class="mi" aria-hidden="true">info</span><span>The last day of teaching comes before the first day.</span>';
+      return;
+    }
+    const lecs = lecturesOf(draft);
+    const off = lecs.filter((l) => l.off).length;
+    const weeks = Math.ceil((parseKey(end) - parseKey(start) + DAY) / (7 * DAY));
+    p.innerHTML = '<span class="mi" aria-hidden="true">event_available</span><span><b>' + plural(lecs.length - off, "lecture") + "</b> over " + plural(weeks, "week")
+      + (off ? " (" + off + " cancelled)" : "") + "</span>";
+  }
+  function showFormError(msg) { const e = $("#f-error"); e.textContent = msg; e.hidden = false; }
+  function submitForm(ev) {
+    ev.preventDefault();
+    if (!form) return;
+    const name = $("#f-name").value.trim().slice(0, 60);
+    const start = $("#f-start").value, end = $("#f-end").value;
+    const days = [...form.days].sort((a, b) => a - b);
+    const picked = document.querySelector('input[name="f-color"]:checked');
+    const color = picked ? picked.value : "blue";
+    if (!name) return showFormError("Enter the course name.");
+    if (!days.length) return showFormError("Pick at least one lecture day.");
+    if (!start || !end) return showFormError("Enter the first and last day of teaching.");
+    if (parseKey(end) < parseKey(start)) return showFormError("The last day of teaching has to come after the first day.");
+    if ((parseKey(end) - parseKey(start)) / DAY > 366) return showFormError("Keep the dates within one year.");
+
+    if (form.id && state.courses[form.id]) {
+      const c = state.courses[form.id];
+      Object.assign(c, { name, start, end, days, color });
+      touch(c.id);
+      closeForm();
+      render();
+      toast("Course updated");
+    } else {
+      const id = "c" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+      state.courses[id] = { id, name, color, days, start, end, createdAt: Date.now(), marks: {} };
+      touch(id);
+      closeForm();
+      go("course", id);
+      toast("Course added");
+    }
+  }
+  function deleteFromForm() {
+    if (!form || !form.id) return;
+    const btn = $("#f-delete");
+    if (!form.confirmDelete) {
+      form.confirmDelete = true;
+      btn.classList.add("armed");
+      btn.innerHTML = '<span class="mi" aria-hidden="true">delete_forever</span>Tap again to delete';
+      return;
+    }
+    const id = form.id;
+    delete state.courses[id];
+    store.deleted.add(id);
+    touch(id);
+    closeForm();
+    go("home");
+    toast("Course deleted");
+  }
+
+  /* ---------- Toast ---------- */
+  let toastTimer = null;
+  function toast(msg) {
+    const t = $("#toast");
+    t.textContent = msg;
+    t.hidden = false;
+    requestAnimationFrame(() => t.classList.add("show"));
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { t.classList.remove("show"); setTimeout(() => { t.hidden = true; }, 250); }, 2600);
+  }
+
+  /* ---------- Events ---------- */
+  document.addEventListener("click", (e) => {
+    const el = e.target.closest("[data-act]");
+    if (!el || el.disabled) return;
+    const { act, id, key } = el.dataset;
+    switch (act) {
+      case "home": go("home"); break;
+      case "open": go("course", id); break;
+      case "new": openForm(null); break;
+      case "edit": openForm(id); break;
+      case "topbar": openForm(state.view === "course" ? state.courseId : null); break;
+      case "drawer": state.drawer = true; syncDrawer(); break;
+      case "close-drawer": state.drawer = false; syncDrawer(); break;
+      case "study": state.refocus = { act: "study", id, key }; study(id, key, 1); break;
+      case "unstudy": state.refocus = { act: "unstudy", id, key }; study(id, key, -1); break;
+      case "off": state.refocus = { act: "off", id, key }; toggleOff(id, key); break;
+      case "title": startTitleEdit(el); break;
+    }
+  });
+  $("#modal").addEventListener("click", (e) => {
+    if (e.target === e.currentTarget || e.target.closest('[data-form="close"]')) { closeForm(); return; }
+    const day = e.target.closest(".day");
+    if (day && form) {
+      const d = Number(day.dataset.day);
+      if (form.days.has(d)) form.days.delete(d); else form.days.add(d);
+      day.setAttribute("aria-pressed", String(form.days.has(d)));
+      $("#f-error").hidden = true;
+      updatePreview();
+    }
+  });
+  $("#f-start").addEventListener("input", updatePreview);
+  $("#f-end").addEventListener("input", updatePreview);
+  $("#f-start").addEventListener("change", updatePreview);
+  $("#f-end").addEventListener("change", updatePreview);
+  $("#course-form").addEventListener("submit", submitForm);
+  $("#f-delete").addEventListener("click", deleteFromForm);
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    if (!$("#modal").hidden) closeForm();
+    else if (state.drawer) { state.drawer = false; syncDrawer(); }
+  });
+  document.addEventListener("focusout", () => { setTimeout(() => { if (state.pending && !isEditing()) render(); }, 0); });
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") flushAll();
+    else if (state.ready) render(); // the date may have moved on
+  });
+  window.addEventListener("pagehide", flushAll);
+  const wide = window.matchMedia("(min-width: 760px)");
+  if (wide.addEventListener) wide.addEventListener("change", () => { if (wide.matches && state.drawer) { state.drawer = false; syncDrawer(); } });
+
+  /* ---------- Start ---------- */
+  buildFormControls();
+  try {
+    const saved = JSON.parse(localStorage.getItem(LS_VIEW) || "null");
+    if (saved && saved.view === "course" && saved.id) { state.view = "course"; state.courseId = String(saved.id); }
+  } catch (e) { /* ignore */ }
+  render();
+  initStore();
+  // Keep the saved courses from being cleared by the browser, and work offline.
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) { /* ignore */ }
+  if ("serviceWorker" in navigator && location.protocol === "https:") {
+    window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => {}); });
+  }
+})();
+</script>
+
+</body>
+</html>

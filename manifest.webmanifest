@@ -1,0 +1,14 @@
+{
+  "name": "Lecture Tracker",
+  "short_name": "Lectures",
+  "description": "Semester courses with an auto-built lecture list: strike cancelled lectures, add titles, and tick each study session.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5f7fb",
+  "theme_color": "#202d49",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

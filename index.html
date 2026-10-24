@@ -9,6 +9,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Lectures">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
+<script>try{var t=localStorage.getItem("lecture-tracker:theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -209,6 +210,23 @@ h1, h2, h3 { text-wrap: balance; }
   transition: background 0.2s ease;
 }
 .side-add:hover { background: var(--side-hover); }
+.theme-switch {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px;
+  margin-top: 10px; padding: 4px;
+  border-radius: 10px;
+  background: rgba(148, 163, 184, 0.1);
+}
+.theme-switch button {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 7px 4px;
+  border-radius: 8px;
+  color: var(--side-text);
+  font-size: 11px; font-weight: 500;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.theme-switch button:hover { color: var(--side-text-strong); }
+.theme-switch button[aria-pressed="true"] { background: var(--side-active); color: #ffffff; }
+.theme-switch .mi { font-size: 18px; }
 .drawer-scrim { position: fixed; inset: 0; background: var(--scrim); z-index: 29; }
 
 .main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
@@ -641,6 +659,11 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
     <div class="side-label">Courses</div>
     <nav class="side-courses" id="side-courses" aria-label="Your courses"></nav>
     <button class="side-add" data-act="new"><span class="mi" aria-hidden="true">add</span>New course</button>
+    <div class="theme-switch" role="group" aria-label="Theme">
+      <button type="button" data-act="theme" data-value="system" aria-pressed="true" title="Follow the device setting"><span class="mi" aria-hidden="true">brightness_auto</span>Auto</button>
+      <button type="button" data-act="theme" data-value="light" aria-pressed="false"><span class="mi" aria-hidden="true">light_mode</span>Light</button>
+      <button type="button" data-act="theme" data-value="dark" aria-pressed="false"><span class="mi" aria-hidden="true">dark_mode</span>Dark</button>
+    </div>
   </aside>
   <div class="drawer-scrim" id="drawer-scrim" data-act="close-drawer" hidden></div>
   <div class="main">
@@ -715,6 +738,22 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
   ];
   const LS_DATA = "lecture-tracker:v1";
   const LS_VIEW = "lecture-tracker:view";
+  const LS_THEME = "lecture-tracker:theme";
+  const hostTheme = document.documentElement.getAttribute("data-theme");
+
+  /* ---------- Theme: Auto follows the device, Light and Dark override it ---------- */
+  function applyTheme(choice) {
+    const root = document.documentElement;
+    if (choice === "light" || choice === "dark") root.setAttribute("data-theme", choice);
+    else if (hostTheme) root.setAttribute("data-theme", hostTheme);
+    else root.removeAttribute("data-theme");
+    document.querySelectorAll('[data-act="theme"]').forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.value === choice)));
+  }
+  function setTheme(choice) {
+    if (choice !== "light" && choice !== "dark") choice = "system";
+    applyTheme(choice);
+    try { localStorage.setItem(LS_THEME, choice); } catch (e) { /* ignore */ }
+  }
   const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   /* ---------- State ---------- */
@@ -1338,6 +1377,7 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
       case "unstudy": state.refocus = { act: "unstudy", id, key }; study(id, key, -1); break;
       case "off": state.refocus = { act: "off", id, key }; toggleOff(id, key); break;
       case "title": startTitleEdit(el); break;
+      case "theme": setTheme(el.dataset.value); break;
     }
   });
   $("#modal").addEventListener("click", (e) => {
@@ -1372,6 +1412,9 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
   if (wide.addEventListener) wide.addEventListener("change", () => { if (wide.matches && state.drawer) { state.drawer = false; syncDrawer(); } });
 
   /* ---------- Start ---------- */
+  let savedTheme = "system";
+  try { savedTheme = localStorage.getItem(LS_THEME) || "system"; } catch (e) { /* ignore */ }
+  applyTheme(savedTheme);
   buildFormControls();
   try {
     const saved = JSON.parse(localStorage.getItem(LS_VIEW) || "null");

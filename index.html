@@ -468,10 +468,33 @@ select.input { -webkit-appearance: auto; appearance: auto; padding-right: 8px; }
 .exam-when { font-size: 13px; font-weight: 500; color: var(--text-2); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .exam-when.soon { color: var(--bad); }
 .ccard-exam { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.lec-meta { display: flex; flex-wrap: wrap; align-items: center; column-gap: 4px; min-width: 0; margin: 1px 0 0 -6px; }
+.lec-meta .title-input { margin-left: 6px; width: calc(100% - 6px); }
+.lec-slides {
+  display: inline-flex; align-items: center; gap: 4px;
+  min-height: 28px; padding: 0 6px;
+  border-radius: 6px;
+  font-size: 13px; color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.lec-slides:hover { background: var(--surface-2); }
+.lec-slides .mi { font-size: 16px; }
+.lec-slides.none { color: var(--faint); }
+.slides-edit { display: inline-flex; align-items: center; gap: 6px; padding: 2px 6px; font-size: 13px; color: var(--muted); }
+.slides-edit input {
+  width: 68px; height: 32px;
+  border: 1px solid var(--primary); border-radius: 8px;
+  padding: 0 8px;
+  background: var(--surface); color: var(--text);
+  font-size: 16px; font-variant-numeric: tabular-nums;
+  box-shadow: 0 0 0 3px var(--primary-soft);
+  outline: none;
+}
 .lec-title {
   display: flex; align-items: center; gap: 6px;
   max-width: 100%; min-height: 28px;
-  margin: 1px 0 0 -6px; padding: 0 6px;
+  margin: 0; padding: 0 6px;
   border-radius: 6px;
   font-size: 14px; color: var(--text-2);
   text-align: left;
@@ -683,6 +706,9 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
 @media (max-width: 519px) {
   .study .lbl { display: none; }
   .lec-actions { gap: 2px; }
+  /* Give the inline editors the whole row on a phone. */
+  .lec:has(.slides-edit) .lec-actions, .lec:has(.title-input) .lec-actions { display: none; }
+  .slides-edit input { width: 64px; }
   .lec-actions .icon-btn { width: 36px; }
   .exam-row, .exam-item { padding: 12px 14px; }
   .lec { gap: 10px; padding: 12px 14px; }
@@ -892,6 +918,12 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
     return "quiz";
   }
   function examChip(x) { return '<span class="chip chip-' + examKind(x.name) + ' name" dir="auto">' + esc(x.name) + "</span>"; }
+  function slidesLabel(l) {
+    if (l.s1 && l.s2) return l.s1 === l.s2 ? "Slide " + l.s1 : "Slides " + l.s1 + "–" + l.s2;
+    if (l.s1) return "From slide " + l.s1;
+    if (l.s2) return "Up to slide " + l.s2;
+    return "";
+  }
   function examChips(l) { return l.off ? "" : l.exams.map(examChip).join(""); }
   // The lectures an exam covers (cancelled ones left out) and how many of them were studied.
   function examStats(x, lecs) {
@@ -932,6 +964,8 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
         week: weekIndex + 1,
         weekStart: firstSunday + weekIndex * 7 * DAY,
         title: m.t || "",
+        s1: m.s1 || 0,
+        s2: m.s2 || 0,
         exams: (c.exams || []).filter((x) => key >= x.from && key <= x.to),
         off,
         n: off ? 0 : (m.n || 0),
@@ -956,13 +990,20 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
   }
 
   /* ---------- Data shape ---------- */
+  function slideNum(v) { const n = Math.floor(Number(v)); return n >= 1 && n <= 9999 ? n : 0; }
   function normalize(id, d) {
     d = d || {};
     const marks = {};
     if (d.marks && typeof d.marks === "object") {
       for (const [k, v] of Object.entries(d.marks)) {
         if (!KEY_RE.test(k) || !v || typeof v !== "object") continue;
-        marks[k] = { t: typeof v.t === "string" ? v.t.slice(0, 120) : "", x: !!v.x, n: Math.max(0, Math.min(99, Math.floor(Number(v.n) || 0))) };
+        marks[k] = {
+          t: typeof v.t === "string" ? v.t.slice(0, 120) : "",
+          x: !!v.x,
+          n: Math.max(0, Math.min(99, Math.floor(Number(v.n) || 0))),
+          s1: slideNum(v.s1),
+          s2: slideNum(v.s2)
+        };
       }
     }
     const exams = [];
@@ -995,7 +1036,7 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
   function toDoc(c) {
     const marks = {};
     for (const [k, v] of Object.entries(c.marks)) {
-      if (v.t || v.x || v.n) marks[k] = { t: v.t || "", x: !!v.x, n: v.n || 0 };
+      if (v.t || v.x || v.n || v.s1 || v.s2) marks[k] = { t: v.t || "", x: !!v.x, n: v.n || 0, s1: v.s1 || 0, s2: v.s2 || 0 };
     }
     const exams = (c.exams || []).map((x) => ({ id: x.id, name: x.name, date: x.date || "", from: x.from, to: x.to }));
     return { name: c.name, color: c.color, days: c.days, start: c.start, end: c.end, createdAt: c.createdAt, exams, marks };
@@ -1103,7 +1144,7 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
   }
 
   /* ---------- Changes ---------- */
-  function mark(c, key) { return c.marks[key] || (c.marks[key] = { t: "", x: false, n: 0 }); }
+  function mark(c, key) { return c.marks[key] || (c.marks[key] = { t: "", x: false, n: 0, s1: 0, s2: 0 }); }
   function study(id, key, delta) {
     const c = state.courses[id]; if (!c) return;
     const m = mark(c, key);
@@ -1279,7 +1320,8 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
       + '<span class="num">' + (l.off ? '<span class="mi" aria-hidden="true">event_busy</span>' : l.num) + "</span>"
       + '<div class="lec-main"><button class="course-link name" dir="auto" data-act="open" data-id="' + esc(c.id) + '">' + esc(c.name) + "</button>"
       + '<div class="lec-sub">' + (l.off ? '<span class="chip chip-off">Cancelled</span>' : "<span>Lecture " + l.num + "</span>" + examChips(l))
-      + (l.title ? '<span aria-hidden="true">·</span><span class="t name" dir="auto">' + esc(l.title) + "</span>" : "") + "</div></div>"
+      + (l.title ? '<span aria-hidden="true">·</span><span class="t name" dir="auto">' + esc(l.title) + "</span>" : "")
+      + (slidesLabel(l) ? '<span aria-hidden="true">·</span><span>' + slidesLabel(l) + "</span>" : "") + "</div></div>"
       + '<div class="lec-actions">' + (l.off ? "" : studyHTML(c.id, l)) + "</div></div>";
   }
 
@@ -1375,11 +1417,16 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
       + (!l.off && l.key === focusKey && l.key !== tk ? '<span class="chip chip-next">Next</span>' : "")
       + (l.off ? '<span class="chip chip-off">Cancelled</span>' : examChips(l));
     const id = esc(c.id);
+    const slides = slidesLabel(l);
     const title = l.off
-      ? (l.title ? '<div class="lec-sub"><span class="t name" dir="auto">' + esc(l.title) + "</span></div>" : "")
-      : '<button class="lec-title' + (l.title ? "" : " empty") + '" data-act="title" data-id="' + id + '" data-key="' + l.key + '"'
+      ? (l.title || slides ? '<div class="lec-sub">' + (l.title ? '<span class="t name" dir="auto">' + esc(l.title) + "</span>" : "")
+        + (l.title && slides ? '<span aria-hidden="true">·</span>' : "") + (slides ? '<span class="t">' + slides + "</span>" : "") + "</div>" : "")
+      : '<div class="lec-meta"><button class="lec-title' + (l.title ? "" : " empty") + '" data-act="title" data-id="' + id + '" data-key="' + l.key + '"'
         + ' aria-label="' + (l.title ? "Edit title: " + esc(l.title) : "Add a title") + '">'
-        + '<span class="t name" dir="auto">' + (l.title ? esc(l.title) : "Add a title") + '</span><span class="mi" aria-hidden="true">edit</span></button>';
+        + '<span class="t name" dir="auto">' + (l.title ? esc(l.title) : "Add a title") + '</span><span class="mi" aria-hidden="true">edit</span></button>'
+        + '<button class="lec-slides' + (slides ? "" : " none") + '" data-act="slides" data-id="' + id + '" data-key="' + l.key + '"'
+        + ' aria-label="' + (slides ? "Edit slides: " + slides : "Add the slides this lecture covers") + '">'
+        + '<span class="mi" aria-hidden="true">slideshow</span><span>' + (slides || "Add slides") + "</span></button></div>";
     return '<div class="' + cls.join(" ") + '"' + (l.key === focusKey ? ' id="focus-row"' : "") + ">"
       + '<span class="num" aria-label="' + (l.off ? "Cancelled" : "Lecture " + l.num) + '">' + (l.off ? "–" : l.num) + "</span>"
       + '<div class="lec-main"><div class="lec-date"><span class="d">' + esc(fmtDay(l.t)) + "</span>" + chips + "</div>" + title + "</div>"
@@ -1432,6 +1479,55 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
       else if (e.key === "Escape") { e.preventDefault(); finish(false); }
     });
     input.addEventListener("blur", () => finish(true));
+  }
+
+  /* ---------- Inline slides editing ---------- */
+  function startSlidesEdit(btn) {
+    const { id, key } = btn.dataset;
+    const c = state.courses[id]; if (!c) return;
+    const m = c.marks[key] || {};
+    let from = m.s1 || 0;
+    const to = m.s2 || 0;
+    if (!from && !to) {
+      // Pick up where the previous lecture's slides ended.
+      const prev = lecturesOf(c).filter((l) => !l.off && l.key < key && l.s2).pop();
+      if (prev) from = prev.s2 + 1;
+    }
+    const wrap = document.createElement("span");
+    wrap.className = "slides-edit";
+    wrap.innerHTML = '<span class="mi" aria-hidden="true">slideshow</span>'
+      + '<input type="number" inputmode="numeric" min="1" max="9999" id="slides-from-' + key + '" aria-label="From slide" placeholder="From" value="' + (from || "") + '">'
+      + "<span>to</span>"
+      + '<input type="number" inputmode="numeric" min="1" max="9999" id="slides-to-' + key + '" aria-label="To slide" placeholder="To" value="' + (to || "") + '">';
+    const [inFrom, inTo] = wrap.querySelectorAll("input");
+    inFrom.dataset.editing = "1";
+    inTo.dataset.editing = "1";
+    btn.replaceWith(wrap);
+    (from && !to ? inTo : inFrom).focus();
+    let done = false;
+    const finish = (save) => {
+      if (done) return;
+      done = true;
+      delete inFrom.dataset.editing;
+      delete inTo.dataset.editing;
+      if (save) {
+        let a = slideNum(inFrom.value), b = slideNum(inTo.value);
+        if (a && b && b < a) { const t = a; a = b; b = t; }
+        const mk = mark(c, key);
+        if (mk.s1 !== a || mk.s2 !== b) { mk.s1 = a; mk.s2 = b; touch(id); }
+      }
+      state.refocus = { act: "slides", id, key };
+      render();
+    };
+    wrap.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        if (e.target === inFrom && !inTo.value) inTo.focus(); else finish(true);
+      } else if (e.key === "Escape") { e.preventDefault(); finish(false); }
+    });
+    wrap.addEventListener("focusout", () => {
+      setTimeout(() => { if (!wrap.contains(document.activeElement)) finish(true); }, 0);
+    });
   }
 
   /* ---------- Add / edit sheet ---------- */
@@ -1683,6 +1779,7 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
       case "unstudy": state.refocus = { act: "unstudy", id, key }; study(id, key, -1); break;
       case "off": state.refocus = { act: "off", id, key }; toggleOff(id, key); break;
       case "title": startTitleEdit(el); break;
+      case "slides": startSlidesEdit(el); break;
       case "theme": setTheme(el.dataset.value); break;
       case "exam-new": openExam(id, null); break;
       case "exam-edit": openExam(id, el.dataset.exam); break;
